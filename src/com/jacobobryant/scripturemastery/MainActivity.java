@@ -10,7 +10,6 @@ import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 
 import java.util.*;
 
-//here's a change
 public class MainActivity extends ExpandableListActivity {
     public static final String TAG = "scripturemastery";
     private static final int LEARN_SCRIPTURE_REQUEST = 0;
