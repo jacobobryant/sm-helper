@@ -1,0 +1,29 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+    <TextView 
+        android:id="@+id/txtReference"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/txtStatus"
+        android:paddingLeft="30dp"
+        android:paddingTop="@dimen/margin"
+        android:paddingRight="@dimen/margin"
+        android:paddingBottom="@dimen/margin"
+        android:textSize="20sp" />
+    <TextView 
+        android:id="@id/txtStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:paddingTop="@dimen/margin"
+        android:paddingRight="@dimen/margin"
+        android:paddingBottom="@dimen/margin"
+        android:textSize="16sp" />
+    <View
+        android:layout_width="0dp"
+        android:layout_height="48dp" />
+</RelativeLayout>
+

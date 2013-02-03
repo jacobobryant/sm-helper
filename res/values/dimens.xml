@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="margin">10dp</dimen>
+    <dimen name="padding">8dp</dimen>
+    <dimen name="scriptureSize">20sp</dimen>
+</resources>
