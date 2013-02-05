@@ -8,6 +8,7 @@ public class Book {
     private Scripture[] scriptures;
     private boolean isScripture;
     private Routine routine;
+    public final int length;
 
 	public Book(String title, Scripture[] scriptures, String strRoutine,
             int id, boolean isScripture) {
@@ -21,6 +22,7 @@ public class Book {
                 new Routine(scriptures, strRoutine);
         this.id = id;
         this.isScripture = isScripture;
+        this.length = scriptures.length;
 	}
 
 	public Book(String title, List<Scripture> scriptures, String routine,

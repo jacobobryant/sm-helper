@@ -3,17 +3,18 @@ package com.jacobobryant.scripturemastery;
 import android.app.ExpandableListActivity;
 import android.content.Intent;
 import android.os.Bundle;
+
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.*;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
-
 import java.util.*;
 
 public class MainActivity extends ExpandableListActivity {
     public static final String TAG = "scripturemastery";
     private static final int LEARN_SCRIPTURE_REQUEST = 0;
     private static final int NEW_PASSAGE_REQUEST = 1;
+    private static final int LEARN_KEYWORD_REQUEST = 2;
     private DataSource data;
     private static Book[] books;
     private static Scripture curScripture;
@@ -112,13 +113,14 @@ public class MainActivity extends ExpandableListActivity {
         int childPos = ExpandableListView
                 .getPackedPositionChild(info.packedPosition);
         Book book = books[groupPos];
+
         switch (item.getItemId()) {
             case R.id.mnuStartRoutine:
                 book.createRoutine();
-                startScripture(book);
-                return true;
             case R.id.mnuContinueRoutine:
-                startScripture(book);
+                inRoutine = true;
+                curScripture = book.getRoutine().current();
+                startScripture();
                 return true;
             case R.id.mnuDeleteGroup:
                 data.deleteGroup(book);
@@ -140,6 +142,14 @@ public class MainActivity extends ExpandableListActivity {
                                  Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         switch (requestCode) {
+            case LEARN_KEYWORD_REQUEST:
+                if (resultCode == RESULT_OK) {
+                    Intent scriptureIntent =
+                            new Intent(this, ScriptureActivity.class);
+                    startActivityForResult(scriptureIntent,
+                            LEARN_SCRIPTURE_REQUEST);
+                }
+                break;
             case LEARN_SCRIPTURE_REQUEST:
                 switch (resultCode) {
                     case ScriptureActivity.RESULT_MASTERED:
@@ -221,13 +231,6 @@ public class MainActivity extends ExpandableListActivity {
         }
     }
 
-    private void startScripture(Book book) {
-        Intent intent = new Intent(this, ScriptureActivity.class);
-        curScripture = book.getRoutine().current();
-        inRoutine = true;
-        startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
-    }
-
     private void commit() {
         Book book;
         Routine routine;
@@ -240,7 +243,8 @@ public class MainActivity extends ExpandableListActivity {
             routine.moveToNext();
             data.commit(book);
             if (routine.length() > 0) {
-                startScripture(book);
+                curScripture = routine.current();
+                startScripture();
             } else {
                 buildExpandableList(false);
             }
@@ -248,6 +252,27 @@ public class MainActivity extends ExpandableListActivity {
             curScripture = null;
             buildExpandableList(false);
         }
+    }
+
+    private void startScripture() {
+        Intent intent;
+        int count = 0;
+
+        if (curScripture.getParent().isScriptureMastery()) {
+            for (Scripture scrip :
+                    curScripture.getParent().getScriptures()) {
+                if (scrip.getStatus() != Scripture.NOT_STARTED) {
+                    count++;
+                }
+            }
+            if (count > 1) {
+                intent = new Intent(this, KeywordActivity.class);
+                startActivityForResult(intent, LEARN_KEYWORD_REQUEST);
+                return;
+            }
+        }
+        intent = new Intent(this, ScriptureActivity.class);
+        startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
     }
 
     public static Scripture getScripture() {

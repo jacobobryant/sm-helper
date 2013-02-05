@@ -71,6 +71,8 @@ public class ScriptureActivity extends Activity {
             setResult(RESULT_CANCELED);
             finish();
         }
+        // there appears to be a bug in the Bundle.get*() methods. They
+        // shouldn't throw NullPointerExceptions, but they do.
         try {
             passageBundle = state.getBundle(PASSAGE_BUNDLE);
         } catch (NullPointerException e) {
