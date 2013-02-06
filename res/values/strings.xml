@@ -35,4 +35,7 @@
     <string name="btn_choose">Choose</string>
     <string name="wrong_reference">Incorrect, try again.</string>
     <string name="right_reference">Correct!</string>
+    <string name="pref_keywords">Practice Keywords</string>
+    <string name="pref_keywords_summ">Guess the reference before starting a scripture.</string>
+    <string name="mnu_settings">Settings</string>
 </resources>

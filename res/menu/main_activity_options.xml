@@ -3,4 +3,7 @@
     <item
         android:id="@+id/mnuNewPassage"
         android:title="@string/mnuNewPassage" />
+    <item
+        android:id="@+id/mnu_settings"
+        android:title="@string/mnu_settings" />
 </menu>

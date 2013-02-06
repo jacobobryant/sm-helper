@@ -7,7 +7,7 @@ public class Scripture {
     public static final int MASTERED = 0;
     public static final int MEMORIZED = 1;
     public static final int PARTIALLY_MEMORIZED = 2;
-    public static final int MAX_LEVEL = 6;
+    public static final int MAX_LEVEL = 5;
     public static final int WAIT = 1;
     public static final int MAX_IN_PROGRESS = WAIT + MAX_LEVEL + 1;
     private String reference;

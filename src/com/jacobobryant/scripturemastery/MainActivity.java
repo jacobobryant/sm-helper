@@ -2,7 +2,10 @@ package com.jacobobryant.scripturemastery;
 
 import android.app.ExpandableListActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+
+import android.preference.PreferenceManager;
 
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -60,11 +63,15 @@ public class MainActivity extends ExpandableListActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
         switch (item.getItemId()) {
             case R.id.mnuNewPassage:
-                Intent intent =
-                        new Intent(this, NewPassageActivity.class);
+                intent = new Intent(this, NewPassageActivity.class);
                 startActivityForResult(intent, NEW_PASSAGE_REQUEST);
+                return true;
+            case R.id.mnu_settings:
+                intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -257,8 +264,13 @@ public class MainActivity extends ExpandableListActivity {
     private void startScripture() {
         Intent intent;
         int count = 0;
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        boolean practiceKeywords =
+                prefs.getBoolean(SettingsActivity.KEYWORDS, true);
 
-        if (curScripture.getParent().isScriptureMastery()) {
+        if (practiceKeywords &&
+                curScripture.getParent().isScriptureMastery()) {
             for (Scripture scrip :
                     curScripture.getParent().getScriptures()) {
                 if (scrip.getStatus() != Scripture.NOT_STARTED) {

@@ -25,7 +25,7 @@ public class Routine {
     }
 
     public void newRoutine() {
-        final float REVIEW_PERCENT = 2.0f / 3;
+        final float REVIEW_PERCENT = 2.0f / 5;
         List<Integer> notStarted = getIndices(Scripture.NOT_STARTED);
         List<Integer> inProgress = getIndices(Scripture.IN_PROGRESS);
         List<Integer> finished = getIndices(Scripture.FINISHED);

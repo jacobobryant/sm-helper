@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.jacobobryant.scripturemastery"
-    android:versionCode="5"
-    android:versionName="0.2.3" >
+    android:versionCode="6"
+    android:versionName="0.3.1" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -27,6 +27,7 @@
         <activity
             android:name="KeywordActivity"
             android:label="@string/keywordLabel" />
+        <activity android:name="SettingsActivity" />
     </application>
 
 </manifest>

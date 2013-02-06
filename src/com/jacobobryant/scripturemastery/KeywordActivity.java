@@ -8,7 +8,6 @@ import java.util.Random;
 import android.app.Activity;
 import android.os.Bundle;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
@@ -115,6 +114,5 @@ public class KeywordActivity extends Activity
             Toast.makeText(this, R.string.wrong_reference,
                     Toast.LENGTH_SHORT).show();
         }
-        Log.d(MainActivity.TAG, "" + references.size());
     }
 }
