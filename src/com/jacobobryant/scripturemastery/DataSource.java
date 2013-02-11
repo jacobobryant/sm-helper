@@ -1,5 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
+import java.util.NoSuchElementException;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -68,6 +70,45 @@ public class DataSource implements Closeable {
         }
         bookCursor.close();
         return books.toArray(new Book[books.size()]);
+    }
+
+    public Book getBook(int id) {
+        Cursor bookCursor;
+        String table;
+        String title;
+        String routine;
+        boolean isScripture;
+        Cursor scriptureCursor;
+        List<Scripture> scriptures;
+
+        bookCursor = db.rawQuery("SELECT title, routine, is_scripture " +
+                "FROM " + DBHandler.BOOKS + " WHERE _id = " + id, null);
+        bookCursor.moveToFirst();
+        if (bookCursor.isAfterLast()) {
+            throw new NoSuchElementException("Couldn't find book with " +
+                    "id = " + id);
+        }
+        table = DBHandler.getTable(id);
+        title = bookCursor.getString(0);
+        routine = bookCursor.getString(1);
+        isScripture = (bookCursor.getInt(2) == 1) ? true : false;
+        bookCursor.close();
+        scriptures = new ArrayList<Scripture>();
+        scriptureCursor = db.rawQuery("SELECT _id, reference, keywords, " +
+                "verses, status, finishedStreak FROM " + table, null);
+        scriptureCursor.moveToFirst();
+        while (! scriptureCursor.isAfterLast()) {
+            scriptures.add(new Scripture(
+                    scriptureCursor.getInt(0),
+                    scriptureCursor.getString(1),
+                    scriptureCursor.getString(2),
+                    scriptureCursor.getString(3),
+                    scriptureCursor.getInt(4),
+                    scriptureCursor.getInt(5)));
+            scriptureCursor.moveToNext();
+        }
+        scriptureCursor.close();
+        return new Book(title, scriptures, routine, id, isScripture);
     }
 
     public void commit(Scripture scripture) {

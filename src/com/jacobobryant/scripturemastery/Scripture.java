@@ -9,7 +9,7 @@ public class Scripture {
     public static final int PARTIALLY_MEMORIZED = 2;
     public static final int MAX_LEVEL = 5;
     public static final int WAIT = 1;
-    public static final int MAX_IN_PROGRESS = WAIT + MAX_LEVEL + 1;
+    public static final int MAX_IN_PROGRESS = 3;
     private String reference;
     private String keywords;
     private String verses;
@@ -123,8 +123,7 @@ public class Scripture {
 
     @Override
 	public String toString() {
-		return "Scripture [reference=" + reference + ", verses=" + verses
-				+ ", status=" + status + ", finishedStreak=" + finishedStreak
-				+ "]";
+		return "Scripture [reference=" + reference + ", status=" +
+            status + ", finishedStreak=" + finishedStreak + "]";
 	}
 }

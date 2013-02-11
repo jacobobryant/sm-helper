@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class Book {
     private int id;
@@ -57,6 +58,16 @@ public class Book {
 
     public Scripture getScripture(int index) {
         return scriptures[index];
+    }
+
+    public Scripture findScriptureById(int id) {
+        for (Scripture scrip : scriptures) {
+            if (scrip.getId() == id) {
+                return scrip;
+            }
+        }
+        throw new NoSuchElementException("Couldn't find element with " +
+                "id = " + id);
     }
 
 	@Override

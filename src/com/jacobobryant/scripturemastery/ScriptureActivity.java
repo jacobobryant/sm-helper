@@ -2,9 +2,11 @@ package com.jacobobryant.scripturemastery;
 
 import android.app.*;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.SystemClock;
+
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.TextView;
@@ -13,7 +15,7 @@ public class ScriptureActivity extends Activity {
     public static final String PASSAGE_BUNDLE = "passageBundle";
     public static final int RESULT_MEMORIZED = RESULT_FIRST_USER;
     public static final int RESULT_PARTIALLY_MEMORIZED =
-                                                    RESULT_FIRST_USER + 1;
+                                            RESULT_FIRST_USER + 1;
     public static final int RESULT_MASTERED = RESULT_FIRST_USER + 2;
     private static final int ROUTINE_DIALOG = 0;
     private static final int PROGRESS_DIALOG = 1;
@@ -61,16 +63,23 @@ public class ScriptureActivity extends Activity {
         LayoutInflater inflater = LayoutInflater.from(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.layout);
         TextView lblVerse;
-        Scripture scripture = MainActivity.getScripture();
+        Book book;
+        Scripture scripture;
         Paint defaultPaint = ((TextView)
                 inflater.inflate(R.layout.verse, null)).getPaint();
         View scrollView = findViewById(R.id.scroll);
         Bundle passageBundle;
+        int bookId;
+        int scripId;
+        Intent intent = getIntent();
+        DataSource data = new DataSource(this);
 
-        if (scripture == null) {
-            setResult(RESULT_CANCELED);
-            finish();
-        }
+        bookId = intent.getIntExtra(MainActivity.EXTRA_BOOK_ID, -1);
+        scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
+        data.open();
+        book = data.getBook(bookId);
+        data.close();
+        scripture = book.findScriptureById(scripId);
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.
         try {

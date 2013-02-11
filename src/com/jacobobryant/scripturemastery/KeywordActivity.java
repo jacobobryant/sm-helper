@@ -1,15 +1,12 @@
 package com.jacobobryant.scripturemastery;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
-
 import android.view.View;
 import android.widget.*;
+
+import java.util.*;
 
 public class KeywordActivity extends Activity
         implements View.OnClickListener {
@@ -25,9 +22,19 @@ public class KeywordActivity extends Activity
     public void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.keyword_activity);
-        Scripture scrip = MainActivity.getScripture();
         RadioButton btn;
         String selectedRef;
+        Intent intent = getIntent();
+        int bookId;
+        int scripId;
+        DataSource data = new DataSource(this);
+        Scripture scrip;
+
+        bookId = intent.getIntExtra(MainActivity.EXTRA_BOOK_ID, -1);
+        scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
+        data.open();
+        scrip = data.getBook(bookId).findScriptureById(scripId);
+        data.close();
 
         radioGroup = (RadioGroup) findViewById(R.id.radio_group);
         choose = (TextView) findViewById(R.id.choose_button);

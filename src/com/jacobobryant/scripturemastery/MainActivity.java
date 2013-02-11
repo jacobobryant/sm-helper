@@ -4,9 +4,7 @@ import android.app.ExpandableListActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-
 import android.preference.PreferenceManager;
-
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.*;
@@ -15,21 +13,44 @@ import java.util.*;
 
 public class MainActivity extends ExpandableListActivity {
     public static final String TAG = "scripturemastery";
+    public static final String EXTRA_BOOK_ID =
+            "com.jacobobryant.scripturemastery.BOOK_ID";
+    public static final String EXTRA_SCRIP_ID =
+            "com.jacobobryant.scripturemastery.SCRIP_ID";
+    private static final String ROUTINE_REF = "in_routine";
     private static final int LEARN_SCRIPTURE_REQUEST = 0;
     private static final int NEW_PASSAGE_REQUEST = 1;
     private static final int LEARN_KEYWORD_REQUEST = 2;
     private DataSource data;
     private static Book[] books;
-    private static Scripture curScripture;
+    private Scripture curScripture;
     private boolean inRoutine;
     
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate(Bundle state) {
+        super.onCreate(state);
+        int bookId;
+        int scripId;
+        try {
+            bookId = state.getInt(EXTRA_BOOK_ID);
+            scripId = state.getInt(EXTRA_SCRIP_ID);
+        } catch (NullPointerException e) {
+            bookId = 0;
+            scripId = 0;
+        }
+
         data = new DataSource(this);
         buildExpandableList(true);
-        curScripture = null;
-        inRoutine = false;
+        if (bookId == 0) {
+            curScripture = null;
+        } else {
+            curScripture = findBookById(bookId).findScriptureById(scripId);
+        }
+        try {
+            inRoutine = state.getBoolean(ROUTINE_REF);
+        } catch (NullPointerException e) {
+            inRoutine = false;
+        }
         registerForContextMenu(getExpandableListView());
     }
 
@@ -48,8 +69,12 @@ public class MainActivity extends ExpandableListActivity {
     @Override
     public boolean onChildClick(ExpandableListView parent, View v,
             int groupPosition, int childPosition, long id) {
+        Book book = books[groupPosition];
         Intent intent = new Intent(this, ScriptureActivity.class);
-        curScripture = books[groupPosition].getScripture(childPosition);
+
+        curScripture = book.getScripture(childPosition);
+        intent.putExtra(EXTRA_BOOK_ID, book.getId());
+        intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
         return true;
     }
@@ -124,6 +149,7 @@ public class MainActivity extends ExpandableListActivity {
         switch (item.getItemId()) {
             case R.id.mnuStartRoutine:
                 book.createRoutine();
+                data.commit(book);
             case R.id.mnuContinueRoutine:
                 inRoutine = true;
                 curScripture = book.getRoutine().current();
@@ -153,6 +179,10 @@ public class MainActivity extends ExpandableListActivity {
                 if (resultCode == RESULT_OK) {
                     Intent scriptureIntent =
                             new Intent(this, ScriptureActivity.class);
+                    scriptureIntent.putExtra(EXTRA_SCRIP_ID,
+                            curScripture.getId());
+                    scriptureIntent.putExtra(EXTRA_BOOK_ID,
+                            curScripture.getParent().getId());
                     startActivityForResult(scriptureIntent,
                             LEARN_SCRIPTURE_REQUEST);
                 }
@@ -185,6 +215,25 @@ public class MainActivity extends ExpandableListActivity {
                         toast(R.string.passageAdded, true);
                 }
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle state) {
+        if (curScripture != null) {
+            state.putInt(EXTRA_BOOK_ID, curScripture.getParent().getId());
+            state.putInt(EXTRA_SCRIP_ID, curScripture.getId());
+        }
+        state.putBoolean(ROUTINE_REF, inRoutine);
+        super.onSaveInstanceState(state);
+    }
+
+    private Book findBookById(int id) {
+        for (Book book : books) {
+            if (book.getId() == id) {
+                return book;
+            }
+        }
+        throw new NoSuchElementException("no book with id = " + id);
     }
 
     private void buildExpandableList(boolean refreshFromDB) {
@@ -262,33 +311,29 @@ public class MainActivity extends ExpandableListActivity {
     }
 
     private void startScripture() {
-        Intent intent;
+        Intent intent = new Intent();
         int count = 0;
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(this);
         boolean practiceKeywords =
                 prefs.getBoolean(SettingsActivity.KEYWORDS, true);
+        Book book = curScripture.getParent();
 
-        if (practiceKeywords &&
-                curScripture.getParent().isScriptureMastery()) {
-            for (Scripture scrip :
-                    curScripture.getParent().getScriptures()) {
-                if (scrip.getStatus() != Scripture.NOT_STARTED) {
-                    count++;
+        intent.putExtra(EXTRA_BOOK_ID, book.getId());
+        intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
+        if (practiceKeywords && book.isScriptureMastery()) {
+            for (Scripture scrip : book.getScriptures()) {
+                if (scrip.getStatus() != Scripture.NOT_STARTED &&
+                        ++count > 1) {
+                    intent.setClass(this, KeywordActivity.class);
+                    startActivityForResult(intent,
+                            LEARN_KEYWORD_REQUEST);
+                    return;
                 }
             }
-            if (count > 1) {
-                intent = new Intent(this, KeywordActivity.class);
-                startActivityForResult(intent, LEARN_KEYWORD_REQUEST);
-                return;
-            }
         }
-        intent = new Intent(this, ScriptureActivity.class);
+        intent.setClass(this, ScriptureActivity.class);
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
-    }
-
-    public static Scripture getScripture() {
-        return curScripture;
     }
 
     public static Book[] getBooks() {
