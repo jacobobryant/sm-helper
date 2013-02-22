@@ -1,15 +1,12 @@
 package com.jacobobryant.scripturemastery;
 
-import java.util.NoSuchElementException;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DataSource implements Closeable {
     private SQLiteDatabase db;
@@ -34,20 +31,20 @@ public class DataSource implements Closeable {
         String table;
         String title;
         String routine;
-        boolean isScripture;
+        boolean preloaded;
         Cursor scriptureCursor;
         List<Book> books = new ArrayList<Book>();
         List<Scripture> scriptures;
 
         bookCursor = db.rawQuery("SELECT _id, title, routine, " +
-                "is_scripture FROM books", null);
+                "preloaded FROM books", null);
         bookCursor.moveToFirst();
         while (! bookCursor.isAfterLast()) {
             id = bookCursor.getInt(0);
             table = DBHandler.getTable(id);
             title = bookCursor.getString(1);
             routine = bookCursor.getString(2);
-            isScripture = (bookCursor.getInt(3) == 1) ? true : false;
+            preloaded = (bookCursor.getInt(3) == 1) ? true : false;
             scriptures = new ArrayList<Scripture>();
             scriptureCursor = db.rawQuery("SELECT _id, reference, " +
                     "keywords, verses, status, finishedStreak FROM " +
@@ -65,7 +62,7 @@ public class DataSource implements Closeable {
             }
             scriptureCursor.close();
             books.add(new Book(title, scriptures, routine, id,
-                    isScripture));
+                    preloaded));
             bookCursor.moveToNext();
         }
         bookCursor.close();
@@ -77,11 +74,11 @@ public class DataSource implements Closeable {
         String table;
         String title;
         String routine;
-        boolean isScripture;
+        boolean preloaded;
         Cursor scriptureCursor;
         List<Scripture> scriptures;
 
-        bookCursor = db.rawQuery("SELECT title, routine, is_scripture " +
+        bookCursor = db.rawQuery("SELECT title, routine, preloaded " +
                 "FROM " + DBHandler.BOOKS + " WHERE _id = " + id, null);
         bookCursor.moveToFirst();
         if (bookCursor.isAfterLast()) {
@@ -91,7 +88,7 @@ public class DataSource implements Closeable {
         table = DBHandler.getTable(id);
         title = bookCursor.getString(0);
         routine = bookCursor.getString(1);
-        isScripture = (bookCursor.getInt(2) == 1) ? true : false;
+        preloaded = (bookCursor.getInt(2) == 1) ? true : false;
         bookCursor.close();
         scriptures = new ArrayList<Scripture>();
         scriptureCursor = db.rawQuery("SELECT _id, reference, keywords, " +
@@ -108,7 +105,7 @@ public class DataSource implements Closeable {
             scriptureCursor.moveToNext();
         }
         scriptureCursor.close();
-        return new Book(title, scriptures, routine, id, isScripture);
+        return new Book(title, scriptures, routine, id, preloaded);
     }
 
     public void commit(Scripture scripture) {

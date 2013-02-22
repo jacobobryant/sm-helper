@@ -13,10 +13,11 @@ import java.util.List;
 public class DBHandler extends SQLiteOpenHelper {
     private final int[] BOOK_IDS = {R.raw.old_testament,
             R.raw.new_testament, R.raw.book_of_mormon,
-            R.raw.doctrine_and_covenants};
+            R.raw.doctrine_and_covenants, R.raw.lists,
+            R.raw.articles_of_faith};
     public static final String DB_NAME = "scriptures.db";
     public static final String BOOKS = "books";
-    private static final int VERSION = 5;
+    private static final int VERSION = 6;
     private Context context;
 
     public DBHandler(Context context) {
@@ -26,14 +27,18 @@ public class DBHandler extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        createTableBooks(db);
+        for (int i = 0; i < BOOK_IDS.length; i++) {
+            addBook(db, readBook(BOOK_IDS[i]), true);
+        }
+    }
+
+    private void createTableBooks(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + BOOKS + " (" +
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "title STRING, " +
                 "routine STRING, " +
-                "is_scripture INTEGER DEFAULT 0);");
-        for (int i = 0; i < BOOK_IDS.length; i++) {
-            addBook(db, readBook(BOOK_IDS[i]), true);
-        }
+                "preloaded INTEGER DEFAULT 0);");
     }
 
     @Override
@@ -45,6 +50,10 @@ public class DBHandler extends SQLiteOpenHelper {
         }
         if (oldVersion == 4) {
             upgrade4to5(db);
+            oldVersion++;
+        }
+        if (oldVersion == 5) {
+            upgrade5to6(db);
             oldVersion++;
         }
     }
@@ -85,16 +94,66 @@ public class DBHandler extends SQLiteOpenHelper {
         }
     }
 
-    public void addBook(SQLiteDatabase db, Book book,
-            boolean isScripture) {
+    private void upgrade5to6(SQLiteDatabase db) {
+        Cursor cur = db.rawQuery("SELECT _id, title, routine, " +
+                "is_scripture FROM " + BOOKS + " ORDER BY _id", null);
+        int position = 0;
+        List<Book> books = new ArrayList<Book>();
+        int id;
+        String title;
+        String routine;
+        boolean preloaded;
+
+        cur.moveToFirst();
+        while (!cur.isAfterLast()) {
+            position++;
+            if (position == 5) {
+                books.add(readBook(BOOK_IDS[4]));
+                books.add(readBook(BOOK_IDS[5]));
+                position += 2;
+            }
+            id = cur.getInt(0);
+            title = cur.getString(1);
+            routine = cur.getString(2);
+            preloaded = (cur.getInt(3) == 1) ? true : false;
+            books.add(new Book(title, new Scripture[0], routine, id,
+                               preloaded));
+            if (id != position) {
+                db.execSQL("ALTER TABLE " + getTable(id) + " RENAME TO " +
+                        getTable(position));
+            }
+            cur.moveToNext();
+        }
+        cur.close();
+        db.execSQL("DROP TABLE " + BOOKS);
+        createTableBooks(db);
+        position = 0;
+        for (Book book : books) {
+            position++;
+            if (position == 5 || position == 6) {
+                addBook(db, book, true);
+                continue;
+            }
+            routine = book.getRoutine().toString();
+            routine = (routine == null) ?
+                    "null" : "\"" + routine + "\"";
+            db.execSQL(String.format("INSERT INTO %s (title, routine, " +
+                    "preloaded) VALUES (\"%s\", %s, %d)", BOOKS,
+                    book.getTitle(), routine,
+                    ((book.wasPreloaded()) ? 1 : 0)));
+        }
+    }
+
+    private void addBook(SQLiteDatabase db, Book book,
+            boolean preloaded) {
         String table;
         Cursor cursor;
-        int isScriptureInt = (isScripture) ? 1 : 0;
+        int preloadedInt = (preloaded) ? 1 : 0;
 
-        db.execSQL("INSERT INTO books (title, is_scripture) VALUES (\"" +
-                book.getTitle() + "\", " + isScriptureInt + ")");
-        cursor = db.rawQuery("SELECT _id FROM books " +
-                "ORDER BY _id DESC LIMIT 1", null);
+        db.execSQL("INSERT INTO books (title, preloaded) VALUES (\"" +
+                book.getTitle() + "\", " + preloadedInt + ")");
+        cursor = db.rawQuery("SELECT _id FROM " + BOOKS +
+                " ORDER BY _id DESC LIMIT 1", null);
         cursor.moveToFirst();
         table = "book_" + cursor.getString(0);
         cursor.close();

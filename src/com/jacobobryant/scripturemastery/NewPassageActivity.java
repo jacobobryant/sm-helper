@@ -43,7 +43,7 @@ public class NewPassageActivity extends Activity {
         newGroup = getString(R.string.newGroup);
         books = MainActivity.getBooks();
         for (Book book : books) {
-            if (!book.isScriptureMastery()) {
+            if (!book.wasPreloaded()) {
                 titles.add(book.getTitle());
             }
         }
@@ -103,7 +103,7 @@ public class NewPassageActivity extends Activity {
         } else {
             position = spnGroup.getSelectedItemPosition();
             for (int i = 0; i <= position; i++) {
-                if (books[i].isScriptureMastery()) {
+                if (books[i].wasPreloaded()) {
                     position++;
                 }
             }

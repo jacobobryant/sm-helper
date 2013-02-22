@@ -124,11 +124,11 @@ public class MainActivity extends ExpandableListActivity {
             if (books[groupPos].getRoutine().length() > 0) {
                 menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
             }
-            if (!books[groupPos].isScriptureMastery()) {
+            if (!books[groupPos].wasPreloaded()) {
                 menu.findItem(R.id.mnuDeleteGroup).setVisible(true);
             }
         } else {
-            if (!books[groupPos].isScriptureMastery()) {
+            if (!books[groupPos].wasPreloaded()) {
                 inflater.inflate(R.menu.passage_menu, menu);
                 menu.setHeaderTitle(books[groupPos]
                         .getScripture(childPos).getReference());
@@ -321,7 +321,7 @@ public class MainActivity extends ExpandableListActivity {
 
         intent.putExtra(EXTRA_BOOK_ID, book.getId());
         intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
-        if (practiceKeywords && book.isScriptureMastery()) {
+        if (practiceKeywords && book.hasKeywords()) {
             for (Scripture scrip : book.getScriptures()) {
                 if (scrip.getStatus() != Scripture.NOT_STARTED &&
                         ++count > 1) {

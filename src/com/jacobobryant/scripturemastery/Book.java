@@ -7,12 +7,12 @@ public class Book {
     private int id;
     private String title;
     private Scripture[] scriptures;
-    private boolean isScripture;
+    private boolean preloaded;
     private Routine routine;
     public final int length;
 
 	public Book(String title, Scripture[] scriptures, String strRoutine,
-            int id, boolean isScripture) {
+            int id, boolean preloaded) {
 		this.title = title;
 		this.scriptures = scriptures;
         for (Scripture scripture : scriptures) {
@@ -22,14 +22,14 @@ public class Book {
                 new Routine(scriptures) :
                 new Routine(scriptures, strRoutine);
         this.id = id;
-        this.isScripture = isScripture;
+        this.preloaded = preloaded;
         this.length = scriptures.length;
 	}
 
 	public Book(String title, List<Scripture> scriptures, String routine,
-            int id, boolean isScripture) {
+            int id, boolean preloaded) {
         this(title, scriptures.toArray(new Scripture[scriptures.size()]),
-                routine, id, isScripture);
+                routine, id, preloaded);
     }
 
     public Book(String title, List<Scripture> scriptures) {
@@ -84,7 +84,15 @@ public class Book {
         return routine;
     }
 
-    public boolean isScriptureMastery() {
-        return isScripture;
+    public boolean wasPreloaded() {
+        return preloaded;
+    }
+
+    public boolean hasKeywords() {
+        if (scriptures.length == 0) {
+            throw new UnsupportedOperationException(
+                    "this book has no children");
+        }
+        return (scriptures[0].getKeywords().length() > 0);
     }
 }
