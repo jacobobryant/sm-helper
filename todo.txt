@@ -1,0 +1,9 @@
+make keyword practice sometimes (randomly) give you a reference and ask for the keyword
+add options to:
+	change number of levels
+	change review percent
+	hide preloaded stuff
+change interface (no expandable list, separate activity for book contents)
+add help, about
+fix input error messages when adding a scripture
+confirm to delete group/scripture
