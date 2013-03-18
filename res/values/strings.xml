@@ -31,7 +31,8 @@
     </string-array>
     <string name="routineDialog">Routine</string>
     <string name="keywordLabel">Keyword Practice</string>
-    <string name="keyword_activity_title">Guess the Reference</string>
+    <string name="guess_reference">Guess the Reference</string>
+    <string name="guess_keyword">Guess the Keywords</string>
     <string name="btn_choose">Choose</string>
     <string name="wrong_reference">Incorrect, try again.</string>
     <string name="right_reference">Correct!</string>

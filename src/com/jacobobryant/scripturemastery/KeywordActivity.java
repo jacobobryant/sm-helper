@@ -10,13 +10,29 @@ import java.util.*;
 
 public class KeywordActivity extends Activity
         implements View.OnClickListener {
-    private final String REF_KEY = "references";
+    private final String CHOICES_KEY = "references";
     private final String SELECTED_KEY = "selected";
     private RadioGroup radioGroup;
-    private String correctReference;
-    private TextView selected;
-    private TextView choose;
-    private List<String> references;
+    private String correctChoice;
+    private TextView radSelected;
+    private TextView btnChoose;
+    private List<String> choices;
+    Mode mode;
+
+    private enum Mode {
+        GUESS_REFERENCE(R.string.guess_reference),
+        GUESS_KEYWORD(R.string.guess_keyword);
+
+        private int id;
+
+        private Mode(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+    }
 
     @Override
     public void onCreate(Bundle state) {
@@ -30,6 +46,8 @@ public class KeywordActivity extends Activity
         DataSource data = new DataSource(this);
         Scripture scrip;
 
+        mode = (new Random().nextInt(2) == 0) ?
+                Mode.GUESS_REFERENCE : Mode.GUESS_KEYWORD;
         bookId = intent.getIntExtra(MainActivity.EXTRA_BOOK_ID, -1);
         scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
         data.open();
@@ -37,52 +55,54 @@ public class KeywordActivity extends Activity
         data.close();
 
         radioGroup = (RadioGroup) findViewById(R.id.radio_group);
-        choose = (TextView) findViewById(R.id.choose_button);
-        setTitle(R.string.keyword_activity_title);
-        ((TextView) findViewById(R.id.keyword))
-                .setText(scrip.getKeywords());
+        btnChoose = (TextView) findViewById(R.id.choose_button);
+        setTitle(getString(mode.getId()));
+        ((TextView) findViewById(R.id.hint)).setText(
+                (mode == Mode.GUESS_REFERENCE) ?
+                scrip.getKeywords() : scrip.getReference());
 
-        correctReference = scrip.getReference();
+        correctChoice = (mode == Mode.GUESS_REFERENCE) ?
+                scrip.getReference() : scrip.getKeywords();
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.
         try {
-            references = state.getStringArrayList(REF_KEY);
+            choices = state.getStringArrayList(CHOICES_KEY);
         } catch (NullPointerException e) {
-            references = null;
+            choices = null;
         }
         try {
             selectedRef = state.getString(SELECTED_KEY);
         } catch (NullPointerException e) {
             selectedRef = null;
         }
-        if (references == null) {
-            references = chooseReferences(scrip);
+        if (choices == null) {
+            choices = getChoices(scrip);
         }
-        for (String ref : references) {
+        for (String choice : choices) {
             btn = new RadioButton(this);
-            btn.setText(ref);
+            btn.setText(choice);
             btn.setOnClickListener(this);
             radioGroup.addView(btn);
-            if (ref.equals(selectedRef)) {
+            if (choice.equals(selectedRef)) {
                 btn.toggle();
-                choose.setEnabled(true);
-                selected = btn;
+                btnChoose.setEnabled(true);
+                radSelected = btn;
             }
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle state) {
-        state.putStringArrayList(REF_KEY,
-                (ArrayList<String>) references);
-        if (selected != null) {
-            state.putString(SELECTED_KEY, selected.getText().toString());
+        state.putStringArrayList(CHOICES_KEY,
+                (ArrayList<String>) choices);
+        if (radSelected != null) {
+            state.putString(SELECTED_KEY, radSelected.getText().toString());
         }
         super.onSaveInstanceState(state);
     }
 
-    public List<String> chooseReferences(Scripture scrip) {
-        final int COUNT = 6;
+    public List<String> getChoices(Scripture scrip) {
+        final int NUMCHOICES = 6;
         List<String> pool = new ArrayList<String>();
         Random rand = new Random();
 
@@ -90,34 +110,36 @@ public class KeywordActivity extends Activity
             if (scripture.getStatus() != Scripture.NOT_STARTED &&
                     ! scripture.getReference()
                     .equals(scrip.getReference())) {
-                pool.add(scripture.getReference());
+                pool.add((mode == Mode.GUESS_REFERENCE) ?
+                        scripture.getReference() : scripture.getKeywords());
             }
         }
-        Collections.shuffle(pool);
-        while (pool.size() >= COUNT) {
+        while (pool.size() >= NUMCHOICES) {
             pool.remove(rand.nextInt(pool.size()));
         }
-        pool.add(rand.nextInt(pool.size() + 1), scrip.getReference());
+        pool.add((mode == Mode.GUESS_REFERENCE) ?
+                scrip.getReference() : scrip.getKeywords());
+        Collections.shuffle(pool);
         return pool;
     }
 
     public void onClick(View v) {
-        selected = (TextView) v;
-        if (!choose.isEnabled()) {
-            choose.setEnabled(true);
+        radSelected = (TextView) v;
+        if (!btnChoose.isEnabled()) {
+            btnChoose.setEnabled(true);
         }
     }
 
     public void btnChooseClick(View btnChoose) {
-        if ((selected.getText().equals(correctReference))) {
+        if ((radSelected.getText().equals(correctChoice))) {
             Toast.makeText(this, R.string.right_reference,
                     Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);
             finish();
         } else {
-            references.remove(selected.getText());
-            radioGroup.removeView(selected);
-            choose.setEnabled(false);
+            choices.remove(radSelected.getText());
+            radioGroup.removeView(radSelected);
+            this.btnChoose.setEnabled(false);
             Toast.makeText(this, R.string.wrong_reference,
                     Toast.LENGTH_SHORT).show();
         }
