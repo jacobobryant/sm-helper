@@ -17,7 +17,7 @@ public class DBHandler extends SQLiteOpenHelper {
             R.raw.articles_of_faith};
     public static final String DB_NAME = "scriptures.db";
     public static final String BOOKS = "books";
-    private static final int VERSION = 6;
+    private static final int VERSION = 7;
     private Context context;
 
     public DBHandler(Context context) {
@@ -54,6 +54,10 @@ public class DBHandler extends SQLiteOpenHelper {
         }
         if (oldVersion == 5) {
             upgrade5to6(db);
+            oldVersion++;
+        }
+        if (oldVersion == 6) {
+            upgrade6to7(db);
             oldVersion++;
         }
     }
@@ -141,6 +145,18 @@ public class DBHandler extends SQLiteOpenHelper {
                     "preloaded) VALUES (\"%s\", %s, %d)", BOOKS,
                     book.getTitle(), routine,
                     ((book.wasPreloaded()) ? 1 : 0)));
+        }
+    }
+
+    private void upgrade6to7(SQLiteDatabase db) {
+        final short LIST_POSITION = 4;
+        Book listBook = readBook(BOOK_IDS[LIST_POSITION]);
+        String table = getTable(LIST_POSITION + 1);
+
+        for (Scripture scrip : listBook.getScriptures()) {
+            db.execSQL("UPDATE " + table + " SET verses = \"" +
+                    scrip.getVerses() + "\" WHERE reference = \"" +
+                    scrip.getReference() + "\"");
         }
     }
 
