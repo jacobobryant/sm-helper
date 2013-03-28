@@ -12,7 +12,7 @@
     <string name="btnSave">Add Passage</string>
     <string name="spnGroupPrompt">Choose a group</string>
     <string name="txtNewGroupHint">Group name</string>
-    <string name="newGroup">Create new group</string>
+    <string name="new_group">Create new group</string>
     <string name="txtTitle">Passage title</string>
     <string name="noGroupError">You must include a group name.</string>
     <string name="noTitleError">You must include a title.</string>

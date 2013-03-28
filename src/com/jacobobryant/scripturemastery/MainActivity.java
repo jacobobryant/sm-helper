@@ -5,10 +5,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.view.*;
+import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.widget.*;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
+import android.widget.SimpleExpandableListAdapter;
+import android.widget.Toast;
+
 import java.util.*;
 
 public class MainActivity extends ExpandableListActivity {
@@ -21,31 +28,22 @@ public class MainActivity extends ExpandableListActivity {
     private static final int LEARN_SCRIPTURE_REQUEST = 0;
     private static final int NEW_PASSAGE_REQUEST = 1;
     private static final int LEARN_KEYWORD_REQUEST = 2;
-    private DataSource data;
-    private static Book[] books;
     private Scripture curScripture;
     private boolean inRoutine;
     
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        int bookId;
         int scripId;
+        SyncDB.syncDB(getApplication());
         try {
-            bookId = state.getInt(EXTRA_BOOK_ID);
             scripId = state.getInt(EXTRA_SCRIP_ID);
+            curScripture = Scripture.objects(getApplicationContext())
+                    .get(scripId);
         } catch (NullPointerException e) {
-            bookId = 0;
-            scripId = 0;
-        }
-
-        data = new DataSource(this);
-        buildExpandableList(true);
-        if (bookId == 0) {
             curScripture = null;
-        } else {
-            curScripture = findBookById(bookId).findScriptureById(scripId);
         }
+        buildExpandableList();
         try {
             inRoutine = state.getBoolean(ROUTINE_REF);
         } catch (NullPointerException e) {
@@ -55,25 +53,14 @@ public class MainActivity extends ExpandableListActivity {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        data.close();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        data.open();
-    }
-
-    @Override
     public boolean onChildClick(ExpandableListView parent, View v,
             int groupPosition, int childPosition, long id) {
-        Book book = books[groupPosition];
+        Book book = Book.objects(getApplication()).all()
+                .toList().get(groupPosition);
         Intent intent = new Intent(this, ScriptureActivity.class);
 
-        curScripture = book.getScripture(childPosition);
-        intent.putExtra(EXTRA_BOOK_ID, book.getId());
+        curScripture = book.getScriptures(getApplication())
+                .toList().get(childPosition);
         intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
         return true;
@@ -117,21 +104,24 @@ public class MainActivity extends ExpandableListActivity {
                 .getPackedPositionGroup(info.packedPosition);
         int childPos = ExpandableListView
                 .getPackedPositionChild(info.packedPosition);
+        Book book = Book.objects(getApplicationContext()).all()
+            .toList().get(groupPos);
 
         if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
             inflater.inflate(R.menu.book_menu, menu);
-            menu.setHeaderTitle(books[groupPos].getTitle());
-            if (books[groupPos].getRoutine().length() > 0) {
+            menu.setHeaderTitle(book.getTitle());
+            if (book.getRoutine(getApplicationContext()).length() > 0) {
                 menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
             }
-            if (!books[groupPos].wasPreloaded()) {
+            if (!book.getPreloaded()) {
                 menu.findItem(R.id.mnuDeleteGroup).setVisible(true);
             }
         } else {
-            if (!books[groupPos].wasPreloaded()) {
+            if (!book.getPreloaded()) {
                 inflater.inflate(R.menu.passage_menu, menu);
-                menu.setHeaderTitle(books[groupPos]
-                        .getScripture(childPos).getReference());
+                menu.setHeaderTitle(book.getScripture(
+                        getApplicationContext(), childPos)
+                        .getReference());
             }
         }
     }
@@ -144,25 +134,29 @@ public class MainActivity extends ExpandableListActivity {
                 .getPackedPositionGroup(info.packedPosition);
         int childPos = ExpandableListView
                 .getPackedPositionChild(info.packedPosition);
-        Book book = books[groupPos];
+        Book book = Book.objects(getApplicationContext()).toList()
+                .get(groupPos);
 
         switch (item.getItemId()) {
             case R.id.mnuStartRoutine:
-                book.createRoutine();
-                data.commit(book);
+                book.getRoutine(getApplicationContext()).newRoutine();
+                book.save(getApplicationContext());
             case R.id.mnuContinueRoutine:
                 inRoutine = true;
-                curScripture = book.getRoutine().current();
+                curScripture = book.getRoutine(getApplicationContext())
+                        .current();
                 startScripture();
                 return true;
             case R.id.mnuDeleteGroup:
-                data.deleteGroup(book);
-                buildExpandableList(true);
+                book.delete(getApplicationContext());
+                //data.deleteGroup(book);
+                buildExpandableList();
                 toast(R.string.groupDeleted, true);
                 return true;
             case R.id.mnuDeletePassage:
-                data.deletePassage(book.getScripture(childPos));
-                buildExpandableList(true);
+                book.getScripture(getApplicationContext(), childPos)
+                        .delete(getApplicationContext());
+                buildExpandableList();
                 toast(R.string.passageDeleted, true);
                 return true;
             default:
@@ -181,8 +175,8 @@ public class MainActivity extends ExpandableListActivity {
                             new Intent(this, ScriptureActivity.class);
                     scriptureIntent.putExtra(EXTRA_SCRIP_ID,
                             curScripture.getId());
-                    scriptureIntent.putExtra(EXTRA_BOOK_ID,
-                            curScripture.getParent().getId());
+                    //scriptureIntent.putExtra(EXTRA_BOOK_ID,
+                            //curScripture.getParent().getId());
                     startActivityForResult(scriptureIntent,
                             LEARN_SCRIPTURE_REQUEST);
                 }
@@ -210,8 +204,7 @@ public class MainActivity extends ExpandableListActivity {
             case NEW_PASSAGE_REQUEST:
                 switch (resultCode) {
                     case RESULT_OK:
-                        data.open();
-                        buildExpandableList(true);
+                        buildExpandableList();
                         toast(R.string.passageAdded, true);
                 }
         }
@@ -220,23 +213,13 @@ public class MainActivity extends ExpandableListActivity {
     @Override
     public void onSaveInstanceState(Bundle state) {
         if (curScripture != null) {
-            state.putInt(EXTRA_BOOK_ID, curScripture.getParent().getId());
             state.putInt(EXTRA_SCRIP_ID, curScripture.getId());
         }
         state.putBoolean(ROUTINE_REF, inRoutine);
         super.onSaveInstanceState(state);
     }
 
-    private Book findBookById(int id) {
-        for (Book book : books) {
-            if (book.getId() == id) {
-                return book;
-            }
-        }
-        throw new NoSuchElementException("no book with id = " + id);
-    }
-
-    private void buildExpandableList(boolean refreshFromDB) {
+    private void buildExpandableList() {
         final String NAME = "NAME";
         final String STATUS = "STATUS";
         List<Map<String, String>> bookData =
@@ -246,15 +229,14 @@ public class MainActivity extends ExpandableListActivity {
         List<Map<String, String>> childReferenceData;
         Map<String, String> map;
 
-        if (refreshFromDB) {
-            books = data.getBooks();
-        }
-        for (Book book : books) {
+        for (Book book : Book.objects(getApplicationContext())
+                .toList()) {
             map = new HashMap<String, String>();
             map.put(NAME, book.getTitle());
             bookData.add(map);
             childReferenceData = new ArrayList<Map<String, String>>();
-            for (Scripture scripture : book.getScriptures()) {
+            for (Scripture scripture : book.getScriptures(
+                        getApplicationContext()).all()) {
                 map = new HashMap<String, String>();
                 map.put(NAME, scripture.getReference());
                 map.put(STATUS, getStatusString(scripture.getStatus()));
@@ -291,22 +273,24 @@ public class MainActivity extends ExpandableListActivity {
         Book book;
         Routine routine;
 
-        data.open();
-        data.commit(curScripture);
+        //data.open();
+        //data.commit(curScripture);
+        curScripture.save(getApplicationContext());
         if (inRoutine) {
-            book = curScripture.getParent();
-            routine = book.getRoutine();
+            book = curScripture.getBook(getApplicationContext());
+            routine = book.getRoutine(getApplicationContext());
             routine.moveToNext();
-            data.commit(book);
+            //data.commit(book);
+            book.save(getApplicationContext());
             if (routine.length() > 0) {
                 curScripture = routine.current();
                 startScripture();
             } else {
-                buildExpandableList(false);
+                buildExpandableList();
             }
         } else {
             curScripture = null;
-            buildExpandableList(false);
+            buildExpandableList();
         }
     }
 
@@ -317,12 +301,12 @@ public class MainActivity extends ExpandableListActivity {
                 PreferenceManager.getDefaultSharedPreferences(this);
         boolean practiceKeywords =
                 prefs.getBoolean(SettingsActivity.KEYWORDS, true);
-        Book book = curScripture.getParent();
+        Book book = curScripture.getBook(getApplicationContext());
 
-        intent.putExtra(EXTRA_BOOK_ID, book.getId());
         intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
-        if (practiceKeywords && book.hasKeywords()) {
-            for (Scripture scrip : book.getScriptures()) {
+        if (practiceKeywords && book.hasKeywords(getApplication())) {
+            for (Scripture scrip : book.getScriptures(
+                    getApplication()).toList()) {
                 if (scrip.getStatus() != Scripture.NOT_STARTED &&
                         ++count > 1) {
                     intent.setClass(this, KeywordActivity.class);
@@ -334,10 +318,6 @@ public class MainActivity extends ExpandableListActivity {
         }
         intent.setClass(this, ScriptureActivity.class);
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
-    }
-
-    public static Book[] getBooks() {
-        return books;
     }
 
     private void toast(int id, boolean lengthShort) {

@@ -2,14 +2,15 @@ package com.jacobobryant.scripturemastery;
 
 import java.util.*;
 
+import android.content.Context;
+
 public class Routine {
     private LinkedList<Integer> routine;
     private Scripture[] scriptures;
 
-    public Routine(Scripture[] scriptures, String strRoutine) {
+    public Routine(Context context, Book book, String strRoutine) {
+        this(context, book);
         int index;
-        this.scriptures = scriptures;
-        routine = new LinkedList<Integer>();
         for (String element : strRoutine.split(",")) {
             index = Integer.parseInt(element);
             if (index < 0 || index >= scriptures.length) {
@@ -19,8 +20,9 @@ public class Routine {
         }
     }
 
-    public Routine(Scripture[] scriptures) {
-        this.scriptures = scriptures;
+    public Routine(Context context, Book book) {
+        this.scriptures = Book.objects(context).all().toList()
+                .toArray(new Scripture[0]);
         routine = new LinkedList<Integer>();
     }
 

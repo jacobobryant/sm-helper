@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import android.app.*;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Paint;
@@ -63,23 +64,17 @@ public class ScriptureActivity extends Activity {
         LayoutInflater inflater = LayoutInflater.from(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.layout);
         TextView lblVerse;
-        Book book;
         Scripture scripture;
         Paint defaultPaint = ((TextView)
                 inflater.inflate(R.layout.verse, null)).getPaint();
         View scrollView = findViewById(R.id.scroll);
         Bundle passageBundle;
-        int bookId;
         int scripId;
         Intent intent = getIntent();
-        DataSource data = new DataSource(this);
+        Context a = getApplication();
 
-        bookId = intent.getIntExtra(MainActivity.EXTRA_BOOK_ID, -1);
         scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
-        data.open();
-        book = data.getBook(bookId);
-        data.close();
-        scripture = book.findScriptureById(scripId);
+        scripture = Scripture.objects(a).get(scripId);
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.
         try {
@@ -91,7 +86,7 @@ public class ScriptureActivity extends Activity {
         passage = (passageBundle == null) ?
                 new Passage(scripture, defaultPaint) :
                 new Passage(scripture, defaultPaint, passageBundle);
-        routine = scripture.getParent().getRoutine().toString(true);
+        routine = scripture.getBook(a).getRoutine(a).toString(true);
         setTitle(scripture.getReference());
         touchTime = 0;
         for (int i = 0; i < passage.getParagraphs().length; i++) {

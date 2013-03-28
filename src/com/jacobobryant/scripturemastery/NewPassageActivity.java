@@ -11,8 +11,7 @@ import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 public class NewPassageActivity extends Activity {
-    private String newGroup;
-    private Book[] books;
+    private List<Integer> bookIds;
 
     private class GroupSelectionListener
             implements OnItemSelectedListener {
@@ -20,8 +19,7 @@ public class NewPassageActivity extends Activity {
         public void onItemSelected(AdapterView<?> parent, View view, 
                 int pos, long id) {
             final View txtNewGroup = findViewById(R.id.txtNewGroup);
-            if (parent.getItemAtPosition(pos).toString()
-                    .equals(newGroup)) {
+            if (pos == parent.getCount() - 1) {
                 txtNewGroup.setVisibility(View.VISIBLE);
                 txtNewGroup.requestFocus();
             } else {
@@ -39,11 +37,11 @@ public class NewPassageActivity extends Activity {
         final Spinner spnGroup = (Spinner) findViewById(R.id.spnGroup);
         final View txtNewGroup = findViewById(R.id.txtNewGroup);
         List<String> titles = new ArrayList<String>();
+        bookIds = new ArrayList<Integer>();
 
-        newGroup = getString(R.string.newGroup);
-        books = MainActivity.getBooks();
-        for (Book book : books) {
-            if (!book.wasPreloaded()) {
+        for (Book book : Book.objects(getApplication()).all()) {
+            if (!book.getPreloaded()) {
+                bookIds.add(book.getId());
                 titles.add(book.getTitle());
             }
         }
@@ -51,7 +49,7 @@ public class NewPassageActivity extends Activity {
             ArrayAdapter<String> spnGroupAdapter =
                     new ArrayAdapter<String>(this,
                     android.R.layout.simple_spinner_item, titles);
-            spnGroupAdapter.add(newGroup);
+            spnGroupAdapter.add(getString(R.string.new_group));
             spnGroupAdapter.setDropDownViewResource(
                     android.R.layout.simple_spinner_dropdown_item);
             spnGroup.setAdapter(spnGroupAdapter);
@@ -72,9 +70,8 @@ public class NewPassageActivity extends Activity {
                 (EditText) findViewById(R.id.txtPassage);
         boolean errors = false;
         boolean createGroup = txtGroup.getVisibility() == View.VISIBLE;
+        Book group;
         Scripture passage;
-        DataSource data;
-        String group;
         int position;
         
         if (createGroup && isEmpty(txtGroup)) {
@@ -93,24 +90,19 @@ public class NewPassageActivity extends Activity {
             return;
         }
 
-        data = new DataSource(this);
-        data.open();
         passage = new Scripture(txtTitle.getText().toString(), "",
                 txtPassage.getText().toString());
         if (createGroup) {
-            group = txtGroup.getText().toString();
-            data.addGroup(new Book(group, passage));
+            group = new Book();
+            group.setTitle(txtGroup.getText().toString());
+            group.save(getApplicationContext());
         } else {
             position = spnGroup.getSelectedItemPosition();
-            for (int i = 0; i <= position; i++) {
-                if (books[i].wasPreloaded()) {
-                    position++;
-                }
-            }
-            passage.setParent(MainActivity.getBooks()[position]);
-            data.addPassage(passage);
+            group = Book.objects(getApplication())
+                    .get(bookIds.get(position));
         }
-        data.close();
+        passage.setBook(group);
+        passage.save(getApplication());
         setResult(RESULT_OK);
         finish();
     }

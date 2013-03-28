@@ -1,98 +1,90 @@
 package com.jacobobryant.scripturemastery;
 
-import java.util.List;
-import java.util.NoSuchElementException;
+import com.orm.androrm.field.BooleanField;
+import com.orm.androrm.field.CharField;
+import com.orm.androrm.field.OneToManyField;
+import com.orm.androrm.Model;
+import com.orm.androrm.QuerySet;
 
-public class Book {
-    private int id;
-    private String title;
-    private Scripture[] scriptures;
-    private boolean preloaded;
+import android.content.Context;
+
+public class Book extends Model {
+    protected CharField title;
+    protected OneToManyField<Book, Scripture> scriptures;
+    protected CharField strRoutine;
+    protected BooleanField preloaded;
     private Routine routine;
-    public final int length;
 
-	public Book(String title, Scripture[] scriptures, String strRoutine,
-            int id, boolean preloaded) {
-		this.title = title;
-		this.scriptures = scriptures;
-        for (Scripture scripture : scriptures) {
-            scripture.setParent(this);
-        }
-        this.routine = (strRoutine == null) ?
-                new Routine(scriptures) :
-                new Routine(scriptures, strRoutine);
-        this.id = id;
-        this.preloaded = preloaded;
-        this.length = scriptures.length;
+	public static final QuerySet<Book> objects(Context context) {
+		return objects(context, Book.class);
 	}
 
-	public Book(String title, List<Scripture> scriptures, String routine,
-            int id, boolean preloaded) {
-        this(title, scriptures.toArray(new Scripture[scriptures.size()]),
-                routine, id, preloaded);
-    }
-
-    public Book(String title, List<Scripture> scriptures) {
-        this(title, scriptures, null, 0, false);
-    }
-
-    public Book(String title, Scripture[] scriptures) {
-        this(title, scriptures, null, 0, false);
-    }
-
-    public Book(String title, Scripture scripture) {
-        this(title, new Scripture[] { scripture });
-    }
-
-    public int getId() {
-        return id;
-    }
+	public Book() {
+		super();
+		title = new CharField();
+        preloaded = new BooleanField();
+        strRoutine = new CharField();
+		scriptures = new OneToManyField<Book, Scripture>(
+                Book.class, Scripture.class);
+	}
 
 	public String getTitle() {
-		return title;
+		return title.get();
 	}
+
+    public void setTitle(String title) {
+        this.title.set(title);
+    }
 	
-    public Scripture[] getScriptures() {
-        return scriptures;
-    }
-
-    public Scripture getScripture(int index) {
-        return scriptures[index];
-    }
-
-    public Scripture findScriptureById(int id) {
-        for (Scripture scrip : scriptures) {
-            if (scrip.getId() == id) {
-                return scrip;
-            }
-        }
-        throw new NoSuchElementException("Couldn't find element with " +
-                "id = " + id);
-    }
-
-	@Override
-	public String toString() {
-		return "Book [title=" + title + ", scriptures.length="
-				+ scriptures.length + "]";
+	public QuerySet<Scripture> getScriptures(Context context) {
+		return scriptures.get(context, this);
 	}
 
-    public void createRoutine() {
-        routine.newRoutine();
-    }
+	public Scripture getScripture(Context context, int index) {
+		return scriptures.get(context, this).toList().get(index);
+	}
 
-    public Routine getRoutine() {
+    public void addScripture(Scripture scrip) {
+        scriptures.add(scrip);
+    }
+	
+    public Routine getRoutine(Context context) {
+        if (routine == null) {
+            routine = new Routine(context, this);
+        }
         return routine;
     }
 
-    public boolean wasPreloaded() {
-        return preloaded;
+    public void setRoutine(Context context, String routine) {
+        strRoutine.set(routine);
+        this.routine = new Routine(context, this, routine);
     }
 
-    public boolean hasKeywords() {
-        if (scriptures.length == 0) {
-            throw new UnsupportedOperationException(
-                    "this book has no children");
+    public boolean getPreloaded() {
+        return preloaded.get();
+    }
+
+    public void setPreloaded(boolean preloaded) {
+        this.preloaded.set(preloaded);
+    }
+
+    public boolean hasKeywords(Context context) {
+        if (scriptures.get(context, this).isEmpty()) {
+            throw new UnsupportedOperationException("this book is empty");
         }
-        return (scriptures[0].getKeywords().length() > 0);
+        return (scriptures.get(context, this).all().limit(1).toList()
+                .get(0).getKeywords().length() > 0);
+    }
+
+    @Override
+    public boolean save(Context context) {
+        strRoutine.set(routine.toString());
+        return super.save(context);
+    }
+
+    @Override
+    public boolean save(Context context, int id) {
+        strRoutine.set(routine.toString());
+        return super.save(context, id);
     }
 }

@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -41,19 +42,13 @@ public class KeywordActivity extends Activity
         RadioButton btn;
         String selectedRef;
         Intent intent = getIntent();
-        int bookId;
-        int scripId;
-        DataSource data = new DataSource(this);
-        Scripture scrip;
+        int scripId = intent.getIntExtra(
+                MainActivity.EXTRA_SCRIP_ID, -1);
+        Scripture scrip = Scripture.objects(getApplication())
+                .get(scripId);
 
         mode = (new Random().nextInt(2) == 0) ?
                 Mode.GUESS_REFERENCE : Mode.GUESS_KEYWORD;
-        bookId = intent.getIntExtra(MainActivity.EXTRA_BOOK_ID, -1);
-        scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
-        data.open();
-        scrip = data.getBook(bookId).findScriptureById(scripId);
-        data.close();
-
         radioGroup = (RadioGroup) findViewById(R.id.radio_group);
         btnChoose = (TextView) findViewById(R.id.choose_button);
         setTitle(getString(mode.getId()));
@@ -96,7 +91,8 @@ public class KeywordActivity extends Activity
         state.putStringArrayList(CHOICES_KEY,
                 (ArrayList<String>) choices);
         if (radSelected != null) {
-            state.putString(SELECTED_KEY, radSelected.getText().toString());
+            state.putString(SELECTED_KEY, radSelected.getText()
+                    .toString());
         }
         super.onSaveInstanceState(state);
     }
@@ -105,13 +101,16 @@ public class KeywordActivity extends Activity
         final int NUMCHOICES = 6;
         List<String> pool = new ArrayList<String>();
         Random rand = new Random();
+        Context a = getApplication();
 
-        for (Scripture scripture : scrip.getParent().getScriptures()) {
+        for (Scripture scripture :
+                scrip.getBook(a).getScriptures(a).all()) {
             if (scripture.getStatus() != Scripture.NOT_STARTED &&
                     ! scripture.getReference()
                     .equals(scrip.getReference())) {
                 pool.add((mode == Mode.GUESS_REFERENCE) ?
-                        scripture.getReference() : scripture.getKeywords());
+                        scripture.getReference() : 
+                        scripture.getKeywords());
             }
         }
         while (pool.size() >= NUMCHOICES) {
