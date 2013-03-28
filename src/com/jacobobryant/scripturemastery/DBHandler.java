@@ -7,8 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DBHandler extends SQLiteOpenHelper {
     private final int[] BOOK_IDS = {R.raw.old_testament,
@@ -19,6 +18,166 @@ public class DBHandler extends SQLiteOpenHelper {
     public static final String BOOKS = "books";
     private static final int VERSION = 7;
     private Context context;
+
+    private class OldBook {
+        private String title;
+        private OldScripture[] scriptures;
+        private boolean preloaded;
+        private OldRoutine routine;
+
+        public OldBook(String title, OldScripture[] scriptures,
+                String strRoutine, int id, boolean preloaded) {
+            this.title = title;
+            this.scriptures = scriptures;
+            for (OldScripture scripture : scriptures) {
+                scripture.setParent(this);
+            }
+            this.routine = (strRoutine == null) ?
+                    new OldRoutine(scriptures) :
+                    new OldRoutine(scriptures, strRoutine);
+            this.preloaded = preloaded;
+        }
+
+        public OldBook(String title, List<OldScripture> scriptures,
+                String routine, int id, boolean preloaded) {
+            this(title, scriptures.toArray(new OldScripture[
+                scriptures.size()]), routine, id, preloaded);
+        }
+
+        public OldBook(String title, List<OldScripture> scriptures) {
+            this(title, scriptures, null, 0, false);
+        }
+
+        public String getTitle() {
+            return title;
+        }
+        
+        public OldScripture[] getScriptures() {
+            return scriptures;
+        }
+
+        public OldScripture getScripture(int index) {
+            return scriptures[index];
+        }
+
+        @Override
+        public String toString() {
+            return "Book [title=" + title + ", scriptures.length="
+                    + scriptures.length + "]";
+        }
+
+        public OldRoutine getRoutine() {
+            return routine;
+        }
+
+        public boolean wasPreloaded() {
+            return preloaded;
+        }
+    }
+
+    private class OldScripture {
+        public static final int NOT_STARTED = 0;
+        private String reference;
+        private String keywords;
+        private String verses;
+        private int status;
+        private int finishedStreak;
+        private OldBook parent;
+
+        public OldScripture(int id, String reference, String keywords,
+                String verses, int status, int finishedStreak) {
+            this.reference = reference;
+            this.keywords = keywords;
+            this.verses = verses;
+            this.status = status;
+            this.finishedStreak = finishedStreak;
+        }
+
+        public OldScripture(String reference, String keywords,
+                String verses) {
+            this(0, reference, keywords, verses, NOT_STARTED, 0);
+        }
+
+        public String getReference() {
+            return reference;
+        }
+
+        public String getVerses() {
+            return verses;
+        }
+
+        public void setParent(OldBook parent) {
+            if (this.parent != null) {
+                throw new UnsupportedOperationException();
+            }
+            this.parent = parent;
+        }
+
+        public String getKeywords() {
+            return keywords;
+        }
+
+        @Override
+        public String toString() {
+            return "Scripture [reference=" + reference + ", status=" +
+                status + ", finishedStreak=" + finishedStreak + "]";
+        }
+    }
+
+    private class OldRoutine {
+        private LinkedList<Integer> routine;
+        private OldScripture[] scriptures;
+
+        public OldRoutine(OldScripture[] scriptures,
+                String strRoutine) {
+            int index;
+            this.scriptures = scriptures;
+            routine = new LinkedList<Integer>();
+            for (String element : strRoutine.split(",")) {
+                index = Integer.parseInt(element);
+                if (index < 0 || index >= scriptures.length) {
+                    throw new IndexOutOfBoundsException();
+                }
+                routine.add(index);
+            }
+        }
+
+        public OldRoutine(OldScripture[] scriptures) {
+            this.scriptures = scriptures;
+            routine = new LinkedList<Integer>();
+        }
+
+        public String toString(boolean humanReadable) {
+            Iterator<Integer> iter = routine.iterator();
+            StringBuilder ret = new StringBuilder();
+
+            if (routine.size() == 0) {
+                return null;
+            }
+            if (humanReadable) {
+                while (iter.hasNext()) {
+                    if (ret.length() > 0) {
+                        ret.append("\n");
+                    }
+                    ret.append(scriptures[iter.next().intValue()]
+                            .getReference());
+                }
+            } else {
+                while (iter.hasNext()) {
+                    if (ret.length() > 0) {
+                        ret.append(",");
+                    }
+                    ret.append(iter.next().intValue());
+                }
+            }
+            return ret.toString();
+        }
+
+        @Override
+        public String toString() {
+            return toString(false);
+        }
+    }
 
     public DBHandler(Context context) {
         super(context, DB_NAME, null, VERSION);
@@ -76,8 +235,8 @@ public class DBHandler extends SQLiteOpenHelper {
                 + BOOKS + " ORDER BY _id ASC", null);
         int isScripture;
         int scripIndex = 0;
-        Book book;
-        Scripture scrip;
+        OldBook book;
+        OldScripture scrip;
 
         bookCursor.moveToFirst();
         while (! bookCursor.isAfterLast()) {
@@ -102,7 +261,7 @@ public class DBHandler extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT _id, title, routine, " +
                 "is_scripture FROM " + BOOKS + " ORDER BY _id", null);
         int position = 0;
-        List<Book> books = new ArrayList<Book>();
+        List<OldBook> books = new ArrayList<OldBook>();
         int id;
         String title;
         String routine;
@@ -120,7 +279,7 @@ public class DBHandler extends SQLiteOpenHelper {
             title = cur.getString(1);
             routine = cur.getString(2);
             preloaded = (cur.getInt(3) == 1) ? true : false;
-            books.add(new Book(title, new Scripture[0], routine, id,
+            books.add(new OldBook(title, new OldScripture[0], routine, id,
                                preloaded));
             if (id != position) {
                 db.execSQL("ALTER TABLE " + getTable(id) + " RENAME TO " +
@@ -132,7 +291,7 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE " + BOOKS);
         createTableBooks(db);
         position = 0;
-        for (Book book : books) {
+        for (OldBook book : books) {
             position++;
             if (position == 5 || position == 6) {
                 addBook(db, book, true);
@@ -150,17 +309,17 @@ public class DBHandler extends SQLiteOpenHelper {
 
     private void upgrade6to7(SQLiteDatabase db) {
         final short LIST_POSITION = 4;
-        Book listBook = readBook(BOOK_IDS[LIST_POSITION]);
+        OldBook listBook = readBook(BOOK_IDS[LIST_POSITION]);
         String table = getTable(LIST_POSITION + 1);
 
-        for (Scripture scrip : listBook.getScriptures()) {
+        for (OldScripture scrip : listBook.getScriptures()) {
             db.execSQL("UPDATE " + table + " SET verses = \"" +
                     scrip.getVerses() + "\" WHERE reference = \"" +
                     scrip.getReference() + "\"");
         }
     }
 
-    private void addBook(SQLiteDatabase db, Book book,
+    private void addBook(SQLiteDatabase db, OldBook book,
             boolean preloaded) {
         String table;
         Cursor cursor;
@@ -178,19 +337,19 @@ public class DBHandler extends SQLiteOpenHelper {
                 "reference STRING, " +
                 "keywords STRING, " +
                 "verses STRING, " +
-                "status INTEGER DEFAULT " + Scripture.NOT_STARTED +
+                "status INTEGER DEFAULT " + OldScripture.NOT_STARTED +
                 ", finishedStreak INTEGER DEFAULT 0);");
-        for (Scripture scripture : book.getScriptures()) {
+        for (OldScripture scripture : book.getScriptures()) {
             addScripture(db, table, scripture);
         }
     }
 
-    public void addBook(SQLiteDatabase db, Book book) {
+    public void addBook(SQLiteDatabase db, OldBook book) {
         addBook(db, book, false);
     }
 
     public void addScripture(SQLiteDatabase db, String table,
-            Scripture scripture) {
+            OldScripture scripture) {
         db.execSQL("INSERT INTO " + table +
                 "(reference, keywords, verses) VALUES (\"" +
                 scripture.getReference() + "\", \"" +
@@ -198,9 +357,9 @@ public class DBHandler extends SQLiteOpenHelper {
                 scripture.getVerses() + "\");");
     }
 
-    private Book readBook(int id) {
+    private OldBook readBook(int id) {
         String title = "";
-        List<Scripture> scriptures = new ArrayList<Scripture>();
+        List<OldScripture> scriptures = new ArrayList<OldScripture>();
         String reference;
         String keywords;
         StringBuilder verses;
@@ -220,14 +379,14 @@ public class DBHandler extends SQLiteOpenHelper {
                     }
                     verses.append(verse);
                 }
-                scriptures.add(new Scripture(reference, keywords,
+                scriptures.add(new OldScripture(reference, keywords,
                         verses.toString()));
             }
             reader.close();
         } catch (IOException ioe) {
-            Log.e("tag", "There was an input error");
+            Log.e("tag", "Couldn't read book data from file");
         }
-        return new Book(title, scriptures);
+        return new OldBook(title, scriptures);
     }
 
     public static String getTable(int id) {
