@@ -1,10 +1,13 @@
 package com.jacobobryant.scripturemastery;
 
 import android.app.ExpandableListActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -24,6 +27,8 @@ public class MainActivity extends ExpandableListActivity {
             "com.jacobobryant.scripturemastery.BOOK_ID";
     public static final String EXTRA_SCRIP_ID =
             "com.jacobobryant.scripturemastery.SCRIP_ID";
+    public static final String EXTRA_IN_ROUTINE =
+            "com.jacobobryant.scripturemastery.IN_ROUTINE";
     private static final String ROUTINE_REF = "in_routine";
     private static final int LEARN_SCRIPTURE_REQUEST = 0;
     private static final int NEW_PASSAGE_REQUEST = 1;
@@ -34,8 +39,14 @@ public class MainActivity extends ExpandableListActivity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        long start = System.currentTimeMillis();
+        long mid;
+        long end;
         int scripId;
+
         SyncDB.syncDB(getApplication());
+        mid = System.currentTimeMillis();
+        buildExpandableList();
         try {
             scripId = state.getInt(EXTRA_SCRIP_ID);
             curScripture = Scripture.objects(getApplicationContext())
@@ -43,13 +54,17 @@ public class MainActivity extends ExpandableListActivity {
         } catch (NullPointerException e) {
             curScripture = null;
         }
-        buildExpandableList();
         try {
             inRoutine = state.getBoolean(ROUTINE_REF);
         } catch (NullPointerException e) {
             inRoutine = false;
         }
         registerForContextMenu(getExpandableListView());
+        end = System.currentTimeMillis();
+        Log.d(TAG, String.format("SyncDB: %.3f",
+            (mid - start) / 1000.0));
+        Log.d(TAG, String.format("rest: %.3f",
+            (end - mid) / 1000.0));
     }
 
     @Override
@@ -134,22 +149,20 @@ public class MainActivity extends ExpandableListActivity {
                 .getPackedPositionGroup(info.packedPosition);
         int childPos = ExpandableListView
                 .getPackedPositionChild(info.packedPosition);
-        Book book = Book.objects(getApplicationContext()).toList()
+        Book book = Book.objects(getApplicationContext()).all().toList()
                 .get(groupPos);
 
         switch (item.getItemId()) {
             case R.id.mnuStartRoutine:
-                book.getRoutine(getApplicationContext()).newRoutine();
-                book.save(getApplicationContext());
+                book.createRoutine(getApplication());
+                book.save(getApplication());
             case R.id.mnuContinueRoutine:
                 inRoutine = true;
-                curScripture = book.getRoutine(getApplicationContext())
-                        .current();
+                curScripture = book.current(getApplication());
                 startScripture();
                 return true;
             case R.id.mnuDeleteGroup:
                 book.delete(getApplicationContext());
-                //data.deleteGroup(book);
                 buildExpandableList();
                 toast(R.string.groupDeleted, true);
                 return true;
@@ -175,8 +188,7 @@ public class MainActivity extends ExpandableListActivity {
                             new Intent(this, ScriptureActivity.class);
                     scriptureIntent.putExtra(EXTRA_SCRIP_ID,
                             curScripture.getId());
-                    //scriptureIntent.putExtra(EXTRA_BOOK_ID,
-                            //curScripture.getParent().getId());
+                    scriptureIntent.putExtra(EXTRA_IN_ROUTINE, true);
                     startActivityForResult(scriptureIntent,
                             LEARN_SCRIPTURE_REQUEST);
                 }
@@ -229,14 +241,13 @@ public class MainActivity extends ExpandableListActivity {
         List<Map<String, String>> childReferenceData;
         Map<String, String> map;
 
-        for (Book book : Book.objects(getApplicationContext())
-                .toList()) {
+        for (Book book : Book.objects(getApplication()).all()) {
             map = new HashMap<String, String>();
             map.put(NAME, book.getTitle());
             bookData.add(map);
             childReferenceData = new ArrayList<Map<String, String>>();
             for (Scripture scripture : book.getScriptures(
-                        getApplicationContext()).all()) {
+                        getApplication()).all()) {
                 map = new HashMap<String, String>();
                 map.put(NAME, scripture.getReference());
                 map.put(STATUS, getStatusString(scripture.getStatus()));
@@ -271,19 +282,15 @@ public class MainActivity extends ExpandableListActivity {
 
     private void commit() {
         Book book;
-        Routine routine;
+        Context a = getApplication();
 
-        //data.open();
-        //data.commit(curScripture);
-        curScripture.save(getApplicationContext());
+        curScripture.save(a);
         if (inRoutine) {
-            book = curScripture.getBook(getApplicationContext());
-            routine = book.getRoutine(getApplicationContext());
-            routine.moveToNext();
-            //data.commit(book);
-            book.save(getApplicationContext());
-            if (routine.length() > 0) {
-                curScripture = routine.current();
+            book = curScripture.getBook(a);
+            book.moveToNext();
+            book.save(a);
+            if (book.getRoutineLength() > 0) {
+                curScripture = book.current(a);
                 startScripture();
             } else {
                 buildExpandableList();
@@ -301,9 +308,10 @@ public class MainActivity extends ExpandableListActivity {
                 PreferenceManager.getDefaultSharedPreferences(this);
         boolean practiceKeywords =
                 prefs.getBoolean(SettingsActivity.KEYWORDS, true);
-        Book book = curScripture.getBook(getApplicationContext());
+        Book book = curScripture.getBook(getApplication());
 
         intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
+        intent.putExtra(EXTRA_IN_ROUTINE, true);
         if (practiceKeywords && book.hasKeywords(getApplication())) {
             for (Scripture scrip : book.getScriptures(
                     getApplication()).toList()) {

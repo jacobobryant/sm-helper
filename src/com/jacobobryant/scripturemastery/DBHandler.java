@@ -23,7 +23,7 @@ public class DBHandler extends SQLiteOpenHelper {
         private String title;
         private OldScripture[] scriptures;
         private boolean preloaded;
-        private OldRoutine routine;
+        private String routine;
 
         public OldBook(String title, OldScripture[] scriptures,
                 String strRoutine, int id, boolean preloaded) {
@@ -32,9 +32,7 @@ public class DBHandler extends SQLiteOpenHelper {
             for (OldScripture scripture : scriptures) {
                 scripture.setParent(this);
             }
-            this.routine = (strRoutine == null) ?
-                    new OldRoutine(scriptures) :
-                    new OldRoutine(scriptures, strRoutine);
+            this.routine = strRoutine;
             this.preloaded = preloaded;
         }
 
@@ -60,13 +58,7 @@ public class DBHandler extends SQLiteOpenHelper {
             return scriptures[index];
         }
 
-        @Override
-        public String toString() {
-            return "Book [title=" + title + ", scriptures.length="
-                    + scriptures.length + "]";
-        }
-
-        public OldRoutine getRoutine() {
+        public String getRoutine() {
             return routine;
         }
 
@@ -80,22 +72,13 @@ public class DBHandler extends SQLiteOpenHelper {
         private String reference;
         private String keywords;
         private String verses;
-        private int status;
-        private int finishedStreak;
         private OldBook parent;
-
-        public OldScripture(int id, String reference, String keywords,
-                String verses, int status, int finishedStreak) {
-            this.reference = reference;
-            this.keywords = keywords;
-            this.verses = verses;
-            this.status = status;
-            this.finishedStreak = finishedStreak;
-        }
 
         public OldScripture(String reference, String keywords,
                 String verses) {
-            this(0, reference, keywords, verses, NOT_STARTED, 0);
+            this.reference = reference;
+            this.keywords = keywords;
+            this.verses = verses;
         }
 
         public String getReference() {
@@ -116,67 +99,6 @@ public class DBHandler extends SQLiteOpenHelper {
         public String getKeywords() {
             return keywords;
         }
-
-        @Override
-        public String toString() {
-            return "Scripture [reference=" + reference + ", status=" +
-                status + ", finishedStreak=" + finishedStreak + "]";
-        }
-    }
-
-    private class OldRoutine {
-        private LinkedList<Integer> routine;
-        private OldScripture[] scriptures;
-
-        public OldRoutine(OldScripture[] scriptures,
-                String strRoutine) {
-            int index;
-            this.scriptures = scriptures;
-            routine = new LinkedList<Integer>();
-            for (String element : strRoutine.split(",")) {
-                index = Integer.parseInt(element);
-                if (index < 0 || index >= scriptures.length) {
-                    throw new IndexOutOfBoundsException();
-                }
-                routine.add(index);
-            }
-        }
-
-        public OldRoutine(OldScripture[] scriptures) {
-            this.scriptures = scriptures;
-            routine = new LinkedList<Integer>();
-        }
-
-        public String toString(boolean humanReadable) {
-            Iterator<Integer> iter = routine.iterator();
-            StringBuilder ret = new StringBuilder();
-
-            if (routine.size() == 0) {
-                return null;
-            }
-            if (humanReadable) {
-                while (iter.hasNext()) {
-                    if (ret.length() > 0) {
-                        ret.append("\n");
-                    }
-                    ret.append(scriptures[iter.next().intValue()]
-                            .getReference());
-                }
-            } else {
-                while (iter.hasNext()) {
-                    if (ret.length() > 0) {
-                        ret.append(",");
-                    }
-                    ret.append(iter.next().intValue());
-                }
-            }
-            return ret.toString();
-        }
-
-        @Override
-        public String toString() {
-            return toString(false);
-        }
     }
 
     public DBHandler(Context context) {
@@ -185,12 +107,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
-        createTableBooks(db);
-        for (int i = 0; i < BOOK_IDS.length; i++) {
-            addBook(db, readBook(BOOK_IDS[i]), true);
-        }
-    }
+    public void onCreate(SQLiteDatabase db) { }
 
     private void createTableBooks(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + BOOKS + " (" +
@@ -203,6 +120,8 @@ public class DBHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion,
                           int newVersion) {
+        Log.d(MainActivity.TAG, "upgrading DB from version "
+            + oldVersion);
         if (oldVersion == 3) {
             upgrade3to4(db);
             oldVersion++;
@@ -219,6 +138,7 @@ public class DBHandler extends SQLiteOpenHelper {
             upgrade6to7(db);
             oldVersion++;
         }
+        Log.d(MainActivity.TAG, "finished upgrading");
     }
 
     private void upgrade3to4(SQLiteDatabase db) {
@@ -297,7 +217,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 addBook(db, book, true);
                 continue;
             }
-            routine = book.getRoutine().toString();
+            routine = book.getRoutine();
             routine = (routine == null) ?
                     "null" : "\"" + routine + "\"";
             db.execSQL(String.format("INSERT INTO %s (title, routine, " +
@@ -384,7 +304,7 @@ public class DBHandler extends SQLiteOpenHelper {
             }
             reader.close();
         } catch (IOException ioe) {
-            Log.e("tag", "Couldn't read book data from file");
+            Log.e(MainActivity.TAG, "Couldn't read book data from file");
         }
         return new OldBook(title, scriptures);
     }

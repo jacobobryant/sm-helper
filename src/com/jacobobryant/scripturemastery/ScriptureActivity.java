@@ -72,7 +72,9 @@ public class ScriptureActivity extends Activity {
         int scripId;
         Intent intent = getIntent();
         Context a = getApplication();
+        boolean inRoutine;
 
+        inRoutine = intent.getBooleanExtra(MainActivity.EXTRA_IN_ROUTINE, false);
         scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
         scripture = Scripture.objects(a).get(scripId);
         // there appears to be a bug in the Bundle.get*() methods. They
@@ -86,7 +88,9 @@ public class ScriptureActivity extends Activity {
         passage = (passageBundle == null) ?
                 new Passage(scripture, defaultPaint) :
                 new Passage(scripture, defaultPaint, passageBundle);
-        routine = scripture.getBook(a).getRoutine(a).toString(true);
+        if (inRoutine) {
+            routine = scripture.getBook(a).getRoutine(a);
+        }
         setTitle(scripture.getReference());
         touchTime = 0;
         for (int i = 0; i < passage.getParagraphs().length; i++) {

@@ -90,7 +90,7 @@ public class NewPassageActivity extends Activity {
             return;
         }
 
-        passage = new Scripture(txtTitle.getText().toString(), "",
+        passage = new Scripture(txtTitle.getText().toString(), null,
                 txtPassage.getText().toString());
         if (createGroup) {
             group = new Book();
