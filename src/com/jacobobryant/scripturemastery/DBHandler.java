@@ -4,10 +4,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import java.io.*;
 import java.util.*;
+
+import android.util.Log;
 
 public class DBHandler extends SQLiteOpenHelper {
     private final int[] BOOK_IDS = {R.raw.old_testament,
@@ -120,8 +121,6 @@ public class DBHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion,
                           int newVersion) {
-        Log.d(MainActivity.TAG, "upgrading DB from version "
-            + oldVersion);
         if (oldVersion == 3) {
             upgrade3to4(db);
             oldVersion++;
@@ -138,7 +137,6 @@ public class DBHandler extends SQLiteOpenHelper {
             upgrade6to7(db);
             oldVersion++;
         }
-        Log.d(MainActivity.TAG, "finished upgrading");
     }
 
     private void upgrade3to4(SQLiteDatabase db) {
@@ -180,7 +178,7 @@ public class DBHandler extends SQLiteOpenHelper {
     private void upgrade5to6(SQLiteDatabase db) {
         Cursor cur = db.rawQuery("SELECT _id, title, routine, " +
                 "is_scripture FROM " + BOOKS + " ORDER BY _id", null);
-        int position = 0;
+        int position = 1;
         List<OldBook> books = new ArrayList<OldBook>();
         int id;
         String title;
@@ -189,12 +187,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
         cur.moveToFirst();
         while (!cur.isAfterLast()) {
-            position++;
-            if (position == 5) {
-                books.add(readBook(BOOK_IDS[4]));
-                books.add(readBook(BOOK_IDS[5]));
-                position += 2;
-            }
             id = cur.getInt(0);
             title = cur.getString(1);
             routine = cur.getString(2);
@@ -204,6 +196,11 @@ public class DBHandler extends SQLiteOpenHelper {
             if (id != position) {
                 db.execSQL("ALTER TABLE " + getTable(id) + " RENAME TO " +
                         getTable(position));
+            }
+            if (++position == 5) {
+                books.add(readBook(BOOK_IDS[4]));
+                books.add(readBook(BOOK_IDS[5]));
+                position += 2;
             }
             cur.moveToNext();
         }

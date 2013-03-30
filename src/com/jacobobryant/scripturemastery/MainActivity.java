@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -39,17 +38,13 @@ public class MainActivity extends ExpandableListActivity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        long start = System.currentTimeMillis();
-        long mid;
-        long end;
         int scripId;
 
         SyncDB.syncDB(getApplication());
-        mid = System.currentTimeMillis();
         buildExpandableList();
         try {
             scripId = state.getInt(EXTRA_SCRIP_ID);
-            curScripture = Scripture.objects(getApplicationContext())
+            curScripture = Scripture.objects(getApplication())
                     .get(scripId);
         } catch (NullPointerException e) {
             curScripture = null;
@@ -60,11 +55,6 @@ public class MainActivity extends ExpandableListActivity {
             inRoutine = false;
         }
         registerForContextMenu(getExpandableListView());
-        end = System.currentTimeMillis();
-        Log.d(TAG, String.format("SyncDB: %.3f",
-            (mid - start) / 1000.0));
-        Log.d(TAG, String.format("rest: %.3f",
-            (end - mid) / 1000.0));
     }
 
     @Override
@@ -119,13 +109,13 @@ public class MainActivity extends ExpandableListActivity {
                 .getPackedPositionGroup(info.packedPosition);
         int childPos = ExpandableListView
                 .getPackedPositionChild(info.packedPosition);
-        Book book = Book.objects(getApplicationContext()).all()
+        Book book = Book.objects(getApplication()).all()
             .toList().get(groupPos);
 
         if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
             inflater.inflate(R.menu.book_menu, menu);
             menu.setHeaderTitle(book.getTitle());
-            if (book.getRoutine(getApplicationContext()).length() > 0) {
+            if (book.getRoutineLength() != 0) {
                 menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
             }
             if (!book.getPreloaded()) {
@@ -135,7 +125,7 @@ public class MainActivity extends ExpandableListActivity {
             if (!book.getPreloaded()) {
                 inflater.inflate(R.menu.passage_menu, menu);
                 menu.setHeaderTitle(book.getScripture(
-                        getApplicationContext(), childPos)
+                        getApplication(), childPos)
                         .getReference());
             }
         }
@@ -247,7 +237,7 @@ public class MainActivity extends ExpandableListActivity {
             bookData.add(map);
             childReferenceData = new ArrayList<Map<String, String>>();
             for (Scripture scripture : book.getScriptures(
-                        getApplication()).all()) {
+                    getApplication()).all()) {
                 map = new HashMap<String, String>();
                 map.put(NAME, scripture.getReference());
                 map.put(STATUS, getStatusString(scripture.getStatus()));
@@ -314,7 +304,7 @@ public class MainActivity extends ExpandableListActivity {
         intent.putExtra(EXTRA_IN_ROUTINE, true);
         if (practiceKeywords && book.hasKeywords(getApplication())) {
             for (Scripture scrip : book.getScriptures(
-                    getApplication()).toList()) {
+                    getApplication()).all()) {
                 if (scrip.getStatus() != Scripture.NOT_STARTED &&
                         ++count > 1) {
                     intent.setClass(this, KeywordActivity.class);

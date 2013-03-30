@@ -6,7 +6,6 @@ import com.orm.androrm.Model;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
 import java.io.*;
@@ -44,17 +43,15 @@ public class SyncDB {
     	DatabaseAdapter.setDatabaseName(DB_NAME);
         DatabaseAdapter.getInstance(app)
                 .setModels(models);
-        Log.d(MainActivity.TAG, "book count = " +
-            Book.objects(app).count());
         if (Book.objects(app).count() == 0) {
             if (app.getDatabasePath(DBHandler.DB_NAME).exists()) {
-                try {
+                //try {
                     upgradeDB(app);
-                } catch (SQLiteException e) {
+                /*} catch (SQLiteException e) {
                     Log.e(MainActivity.TAG,
                         "Couldn't upgrade old database", e);
                     populate(app);
-                }
+                }*/
             } else {
                 populate(app);
             }
@@ -65,8 +62,10 @@ public class SyncDB {
         List<BookRecord> books;
         Book book;
         Scripture scrip;
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
 
         books = getBooks(app);
+        adapter.beginTransaction();
         for (BookRecord bookRecord : books) {
             book = new Book();
             book.setTitle(bookRecord.title);
@@ -75,14 +74,13 @@ public class SyncDB {
                 scrip = new Scripture(scripRecord.ref,
                     scripRecord.keywords, scripRecord.verses,
                     scripRecord.status, scripRecord.finishedStreak);
-                scrip.setBook(book);
                 book.addScripture(scrip);
-                book.save(app);
                 scrip.save(app);
             }
             book.setRoutine(bookRecord);
             book.save(app);
         }
+        adapter.commitTransaction();
         app.deleteDatabase(DBHandler.DB_NAME);
     }
 
@@ -106,7 +104,7 @@ public class SyncDB {
             book.title = bookCursor.getString(1);
             book.routine = bookCursor.getString(2);
             book.preloaded = (bookCursor.getInt(3) == 1) ? true : false;
-            scriptureCursor = db.rawQuery("SELECT id, reference, " +
+            scriptureCursor = db.rawQuery("SELECT _id, reference, " +
                     "keywords, verses, status, finishedStreak FROM " +
                     table, null);
             scriptureCursor.moveToFirst();
@@ -141,9 +139,9 @@ public class SyncDB {
         String keywords;
         StringBuilder verses;
         String verse;
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
 
-        Log.d(MainActivity.TAG, "populating database");
-
+        adapter.beginTransaction();
         for (int id : BOOK_IDS) {
             book = new Book();
             book.setPreloaded(true);
@@ -163,7 +161,7 @@ public class SyncDB {
                     }
                     scrip = new Scripture(reference, keywords,
                         verses.toString());
-                    scrip.setBook(book);
+                    book.addScripture(scrip);
                     scrip.save(app);
                 }
                 reader.close();
@@ -173,5 +171,6 @@ public class SyncDB {
             }
             book.save(app);
         }
+        adapter.commitTransaction();
     }
 }

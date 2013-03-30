@@ -10,6 +10,7 @@ import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.BooleanField;
 import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.OneToManyField;
+
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
@@ -34,6 +35,15 @@ public class Book extends Model {
 		scriptures = new OneToManyField<Book, Scripture>(
                 Book.class, Scripture.class);
 	}
+
+    /*
+    @Override
+    protected void migrate(Context context) {
+        Migrator<Book> migrator = new Migrator<Book>(Book.class);
+        migrator.addField("routine", new BlobField());
+        migrator.migrate(context);
+    }
+    */
 
 	public String getTitle() {
 		return title.get();
@@ -71,10 +81,6 @@ public class Book extends Model {
                 .get(0).getKeywords().length() != 0);
     }
 
-    public void setRoutine(String strRoutine) {
-
-    }
-
     public void createRoutine(Context context) {
         final float REVIEW_PERCENT = 2.0f / 5;
         List<Integer> notStarted = new ArrayList<Integer>();
@@ -85,7 +91,7 @@ public class Book extends Model {
         int index;
         List<Integer> list;
 
-        for (Scripture scrip : scriptures.get(context, this)) {
+        for (Scripture scrip : scriptures.get(context, this).all()) {
             if (scrip.getStatus() == Scripture.NOT_STARTED) {
                 list = notStarted;
             } else if (scrip.getStatus() == Scripture.IN_PROGRESS) {
@@ -114,7 +120,7 @@ public class Book extends Model {
 
     public String getRoutine(Context context) {
         StringBuilder sb = new StringBuilder();
-        if (routine.get().length == 0) {
+        if (lstRoutine == null || lstRoutine.size() == 0) {
             return null;
         }
         sb.append(scriptures.get(context, this).get(routine.get()[0])
@@ -128,15 +134,19 @@ public class Book extends Model {
     }
 
     private void saveRoutine() {
-        ByteBuffer buf = ByteBuffer.allocate(lstRoutine.size() * 4);
-        for (int i : lstRoutine) {
-            buf.putInt(i);
+        if (lstRoutine.size() == 0) {
+            routine.set(null);
+        } else {
+            ByteBuffer buf = ByteBuffer.allocate(lstRoutine.size() * 4);
+            for (int i : lstRoutine) {
+                buf.putInt(i);
+            }
+            routine.set(buf.array());
         }
-        routine.set(buf.array());
     }
 
     public int getRoutineLength() {
-        return lstRoutine.size();
+        return (lstRoutine == null) ? 0 : lstRoutine.size();
     }
 
     public Scripture current(Context context) {

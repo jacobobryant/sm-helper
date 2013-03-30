@@ -137,4 +137,11 @@ public class Scripture extends Model {
     public String getKeywords() {
         return keywords.get();
     }
+
+	@Override
+	public String toString() {
+		return "Scripture [reference=" + reference + ", keywords=" + keywords
+				+ ", verses=" + verses + ", status=" + status
+				+ ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
+	}
 }

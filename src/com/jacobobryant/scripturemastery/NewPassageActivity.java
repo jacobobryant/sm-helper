@@ -95,7 +95,7 @@ public class NewPassageActivity extends Activity {
         if (createGroup) {
             group = new Book();
             group.setTitle(txtGroup.getText().toString());
-            group.save(getApplicationContext());
+            group.save(getApplication());
         } else {
             position = spnGroup.getSelectedItemPosition();
             group = Book.objects(getApplication())
