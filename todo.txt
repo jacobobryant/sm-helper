@@ -1,8 +1,0 @@
-add options to:
-	change number of levels
-	change review percent
-	hide preloaded stuff
-change interface (no expandable list, separate activity for book contents)
-add help, about
-fix input error messages when adding a scripture
-confirm to delete group/scripture

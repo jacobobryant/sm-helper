@@ -1,42 +1,49 @@
 <resources>
-    <string name="app_name">SM Helper</string>
-    <string name="title_activity_main">Scripture Mastery Helper</string>
-    <string name="mnuIncreaseLevel">Increase Level</string>
-    <string name="mnuDecreaseLevel">Decrease Level</string>
-    <string name="mnuAddPassage">Add</string>
-    <string name="mnuStartRoutine">Start New Routine</string>
-    <string name="mnuContinueRoutine">Continue Routine</string>
-    <string name="mnuRoutine">View Routine</string>
-    <string name="mnuNewPassage">Add Passage</string>
-    <string name="txtPassageHint">Passage text</string>
-    <string name="btnSave">Add Passage</string>
-    <string name="spnGroupPrompt">Choose a group</string>
-    <string name="txtNewGroupHint">Group name</string>
-    <string name="new_group">Create new group</string>
-    <string name="txtTitle">Passage title</string>
-    <string name="noGroupError">You must include a group name.</string>
-    <string name="noTitleError">You must include a title.</string>
-    <string name="noPassageError">You must include text to be memorized.</string>
-    <string name="passageAdded">Passage added successfully.</string>
-    <string name="delete">Delete</string>
-    <string name="passageDeleted">Passage deleted successfully.</string>
-    <string name="groupDeleted">Group deleted successfully.</string>
-    <string name="newPassageLabel">Add New Passage</string>
-    <string name="mnuDone">Done</string>
-    <string name="progressDialog">How well do you know this passage now?</string>
-    <string-array name="progress">
-        <item>Memorized</item>
-        <item>Partially memorized</item>
-        <item>Mastered</item>
-    </string-array>
-    <string name="routineDialog">Routine</string>
-    <string name="keywordLabel">Keyword Practice</string>
-    <string name="guess_reference">Guess the Reference</string>
-    <string name="guess_keyword">Guess the Keywords</string>
-    <string name="btn_choose">Choose</string>
-    <string name="wrong_reference">Incorrect, try again.</string>
-    <string name="right_reference">Correct!</string>
-    <string name="pref_keywords">Practice Keywords</string>
-    <string name="pref_keywords_summ">Guess the reference before starting a scripture.</string>
-    <string name="mnu_settings">Settings</string>
+<string name="app_name">SM Helper</string>
+<string name="title_activity_main">Scripture Mastery Helper</string>
+<string name="mnuIncreaseLevel">Increase Level</string>
+<string name="mnuDecreaseLevel">Decrease Level</string>
+<string name="mnuAddPassage">Add</string>
+<string name="mnuStartRoutine">Start New Routine</string>
+<string name="mnuContinueRoutine">Continue Routine</string>
+<string name="mnuRoutine">View Routine</string>
+<string name="mnuNewPassage">Add Passage</string>
+<string name="txtPassageHint">Passage text</string>
+<string name="btnSave">Add Passage</string>
+<string name="spnGroupPrompt">Choose a group</string>
+<string name="txtNewGroupHint">Group name</string>
+<string name="new_group">Create new group</string>
+<string name="txtTitle">Passage title</string>
+<string name="noGroupError">You must include a group name.</string>
+<string name="noTitleError">You must include a title.</string>
+<string name="noPassageError">You must include text to be memorized.</string>
+<string name="passageAdded">Passage added successfully.</string>
+<string name="delete">Delete</string>
+<string name="passageDeleted">Passage deleted successfully.</string>
+<string name="groupDeleted">Group deleted successfully.</string>
+<string name="newPassageLabel">Add New Passage</string>
+<string name="mnuDone">Done</string>
+<string name="progressDialog">How well do you know this passage now?</string>
+<string-array name="progress">
+    <item>Memorized</item>
+    <item>Partially memorized</item>
+    <item>Mastered</item>
+</string-array>
+<string name="routineDialog">Routine</string>
+<string name="keywordLabel">Keyword Practice</string>
+<string name="guess_reference">Guess the Reference</string>
+<string name="guess_keyword">Guess the Keywords</string>
+<string name="btn_choose">Choose</string>
+<string name="wrong_reference">Incorrect, try again.</string>
+<string name="right_reference">Correct!</string>
+<string name="pref_keywords">Practice Keywords</string>
+<string name="pref_keywords_summ">Guess the reference before starting a scripture.</string>
+<string name="mnu_settings">Settings</string>
+
+<string name="crash_toast_text">SM Helper has crashed unexpectedly</string>
+<string name="crash_dialog_title">SM Helper has crashed</string>
+<string name="crash_dialog_text">An unexpected error forced the
+    application to stop. Please help us fix this by emailing us the error data.</string>
+<string name="crash_dialog_comment_prompt">Additional comments (optional):</string>
+<string name="crash_dialog_ok_toast">Thank you!</string>
 </resources>
