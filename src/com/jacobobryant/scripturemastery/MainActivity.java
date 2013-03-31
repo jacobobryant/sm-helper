@@ -39,6 +39,9 @@ public class MainActivity extends ExpandableListActivity {
     public void onCreate(Bundle state) {
         super.onCreate(state);
         int scripId;
+        int foo;
+
+        if (true) foo = 7 / 0;
 
         SyncDB.syncDB(getApplication());
         buildExpandableList();
