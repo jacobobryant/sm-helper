@@ -197,12 +197,12 @@ public class DBHandler extends SQLiteOpenHelper {
                 db.execSQL("ALTER TABLE " + getTable(id) + " RENAME TO " +
                         getTable(position));
             }
-            if (++position == 5) {
+            cur.moveToNext();
+            if (++position == 5 || cur.isAfterLast()) {
                 books.add(readBook(BOOK_IDS[4]));
                 books.add(readBook(BOOK_IDS[5]));
                 position += 2;
             }
-            cur.moveToNext();
         }
         cur.close();
         db.execSQL("DROP TABLE " + BOOKS);
