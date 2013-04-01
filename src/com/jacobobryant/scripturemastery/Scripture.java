@@ -17,8 +17,7 @@ public class Scripture extends Model {
     public static final int MASTERED = 0;
     public static final int MEMORIZED = 1;
     public static final int PARTIALLY_MEMORIZED = 2;
-    public static final int MAX_LEVEL = 5;
-    public static final int WAIT = 1;
+    public static final int NUM_LEVELS = 5;
     public static final int MAX_IN_PROGRESS = 3;
     protected CharField reference;
     protected CharField keywords;
@@ -74,14 +73,14 @@ public class Scripture extends Model {
     public void setProgress(int progress) {
         switch (progress) {
             case MASTERED:
-                if (finishedStreak.get() < WAIT + MAX_LEVEL) {
-                    finishedStreak.set(WAIT + MAX_LEVEL);
+                if (finishedStreak.get() < NUM_LEVELS) {
+                    finishedStreak.set(NUM_LEVELS);
                     status.set(FINISHED);
                 }
                 break;
             case MEMORIZED:
                 finishedStreak.set(finishedStreak.get() + 1);
-                if (finishedStreak.get() > WAIT + MAX_LEVEL ) {
+                if (finishedStreak.get() > NUM_LEVELS ) {
                     status.set(FINISHED);
                 } else {
                     status.set(IN_PROGRESS);
@@ -90,8 +89,8 @@ public class Scripture extends Model {
             case PARTIALLY_MEMORIZED:
                 // decrement the starting level
                 if (finishedStreak.get() > 0) {
-                    if (finishedStreak.get() > WAIT + MAX_LEVEL) {
-                        finishedStreak.set(WAIT + MAX_LEVEL - 1);
+                    if (finishedStreak.get() > NUM_LEVELS) {
+                        finishedStreak.set(NUM_LEVELS - 1);
                     } else {
                         finishedStreak.set(finishedStreak.get() - 1);
                     }
@@ -110,11 +109,11 @@ public class Scripture extends Model {
     }
 
     public int getStartLevel() {
-        int level = finishedStreak.get() - WAIT;
+        int level = finishedStreak.get();
         if (level < 0) {
             level = 0;
-        } else if (level > MAX_LEVEL) {
-            level = MAX_LEVEL;
+        } else if (level > NUM_LEVELS) {
+            level = NUM_LEVELS;
         }
         return level;
     }

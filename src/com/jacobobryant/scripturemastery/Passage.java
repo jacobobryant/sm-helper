@@ -144,7 +144,7 @@ public class Passage {
             wordCount += this.paragraphs[i].length;
         }
         this.positionIncrement = (int) FloatMath.ceil(
-                (wordCount * HIDDEN_STATES) / (float) Scripture.MAX_LEVEL);
+                (wordCount * HIDDEN_STATES) / (float) Scripture.NUM_LEVELS);
         this.textPaint = textPaint;
         this.hideOrder = hideOrder;
         this.position = 0;
@@ -238,6 +238,6 @@ public class Passage {
     }
 
     public boolean hasMoreLevels() {
-        return (level < Scripture.MAX_LEVEL);
+        return (level < Scripture.NUM_LEVELS);
     }
 }
