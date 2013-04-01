@@ -20,7 +20,7 @@ import android.widget.Toast;
 
 import java.util.*;
 
-public class MainActivity extends ListActivity {
+public class MainActivity extends ExpandableListActivity {
     public static final String TAG = "scripturemastery";
     public static final String EXTRA_BOOK_ID =
             "com.jacobobryant.scripturemastery.BOOK_ID";
@@ -41,7 +41,7 @@ public class MainActivity extends ListActivity {
         int scripId;
 
         SyncDB.syncDB(getApplication());
-        buildList();
+        buildExpandableList();
         try {
             scripId = state.getInt(EXTRA_SCRIP_ID);
             curScripture = Scripture.objects(getApplication())
@@ -54,18 +54,20 @@ public class MainActivity extends ListActivity {
         } catch (NullPointerException e) {
             inRoutine = false;
         }
-        registerForContextMenu(getListView());
+        registerForContextMenu(getExpandableListView());
     }
 
     @Override
-    public boolean onChildClick(ListView parent, View v,
-            int position, long id) {
-        Book book = Book.objects(getApplication()).limit(position, 1)
-                .toList().get(0);
-        Intent intent = new Intent(this, ScriptureListActivity.class);
+    public boolean onChildClick(ExpandableListView parent, View v,
+            int groupPosition, int childPosition, long id) {
+        Book book = Book.objects(getApplication()).all()
+                .toList().get(groupPosition);
+        Intent intent = new Intent(this, ScriptureActivity.class);
 
-        intent.putExtra(EXTRA_BOOK_ID, book.getId());
-        startActivity(intent);
+        curScripture = book.getScriptures(getApplication())
+                .toList().get(childPosition);
+        intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
+        startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
         return true;
     }
 
@@ -97,21 +99,35 @@ public class MainActivity extends ListActivity {
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        AdapterView.AdapterContextMenuInfo info =
-                (AdapterView.AdapterContextMenuInfo) menuInfo;
+        ExpandableListView.ExpandableListContextMenuInfo info =
+                (ExpandableListView.ExpandableListContextMenuInfo)
+                menuInfo;
         MenuInflater inflater = getMenuInflater();
-        int position = ExpandableListView
+        int type = ExpandableListView
+                .getPackedPositionType(info.packedPosition);
+        int groupPos = ExpandableListView
                 .getPackedPositionGroup(info.packedPosition);
+        int childPos = ExpandableListView
+                .getPackedPositionChild(info.packedPosition);
         Book book = Book.objects(getApplication()).all()
             .toList().get(groupPos);
 
-        inflater.inflate(R.menu.book_menu, menu);
-        menu.setHeaderTitle(book.getTitle());
-        if (book.getRoutineLength() != 0) {
-            menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
-        }
-        if (!book.getPreloaded()) {
-            menu.findItem(R.id.mnuDeleteGroup).setVisible(true);
+        if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+            inflater.inflate(R.menu.book_menu, menu);
+            menu.setHeaderTitle(book.getTitle());
+            if (book.getRoutineLength() != 0) {
+                menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
+            }
+            if (!book.getPreloaded()) {
+                menu.findItem(R.id.mnuDeleteGroup).setVisible(true);
+            }
+        } else {
+            if (!book.getPreloaded()) {
+                inflater.inflate(R.menu.passage_menu, menu);
+                menu.setHeaderTitle(book.getScripture(
+                        getApplication(), childPos)
+                        .getReference());
+            }
         }
     }
 
@@ -210,19 +226,35 @@ public class MainActivity extends ListActivity {
         final String STATUS = "STATUS";
         List<Map<String, String>> bookData =
                 new ArrayList<Map<String, String>>();
+        List<List<Map<String, String>>> referenceData =
+                new ArrayList<List<Map<String, String>>>();
+        List<Map<String, String>> childReferenceData;
         Map<String, String> map;
 
         for (Book book : Book.objects(getApplication()).all()) {
             map = new HashMap<String, String>();
             map.put(NAME, book.getTitle());
             bookData.add(map);
+            childReferenceData = new ArrayList<Map<String, String>>();
+            for (Scripture scripture : book.getScriptures(
+                    getApplication()).all()) {
+                map = new HashMap<String, String>();
+                map.put(NAME, scripture.getReference());
+                map.put(STATUS, getStatusString(scripture.getStatus()));
+                childReferenceData.add(map);
+            }
+            referenceData.add(childReferenceData);
         }
-        setListAdapter(new SimpleAdapter(
+        setListAdapter(new SimpleExpandableListAdapter(
                 this,
                 bookData,
-                android.R.layout.simple_list_item_1,
+                android.R.layout.simple_expandable_list_item_1,
                 new String[] {NAME},
-                new int[] {android.R.id.text1}));
+                new int[] {android.R.id.text1},
+                referenceData,
+                R.layout.scripture_list_item,
+                new String[] {NAME, STATUS},
+                new int[] {R.id.txtReference, R.id.txtStatus}));
     }
 
     private String getStatusString(int status) {

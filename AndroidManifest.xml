@@ -32,6 +32,7 @@
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:finishOnTaskLaunch="true" />
+        <activity android:name="ScriptureListActivity" />
     </application>
 
 </manifest>
