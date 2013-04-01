@@ -184,6 +184,7 @@ public class DBHandler extends SQLiteOpenHelper {
         String title;
         String routine;
         boolean preloaded;
+        int listBookPosition = 0;
 
         cur.moveToFirst();
         while (!cur.isAfterLast()) {
@@ -199,6 +200,7 @@ public class DBHandler extends SQLiteOpenHelper {
             }
             cur.moveToNext();
             if (++position == 5 || cur.isAfterLast()) {
+                listBookPosition = position;
                 books.add(readBook(BOOK_IDS[4]));
                 books.add(readBook(BOOK_IDS[5]));
                 position += 2;
@@ -210,7 +212,8 @@ public class DBHandler extends SQLiteOpenHelper {
         position = 0;
         for (OldBook book : books) {
             position++;
-            if (position == 5 || position == 6) {
+            if (position == listBookPosition ||
+                    position == listBookPosition + 1) {
                 addBook(db, book, true);
                 continue;
             }
