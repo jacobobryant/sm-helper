@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
+import android.util.Log;
+
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -40,6 +42,7 @@ public class MainActivity extends ListActivity {
         super.onCreate(state);
         int scripId;
 
+        Log.d(TAG, "Entering SM Helper");
         SyncDB.syncDB(getApplication());
         buildList();
         try {

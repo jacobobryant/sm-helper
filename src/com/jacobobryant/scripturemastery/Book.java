@@ -36,14 +36,15 @@ public class Book extends Model {
                 Book.class, Scripture.class);
 	}
 
-    /*
-    @Override
-    protected void migrate(Context context) {
-        Migrator<Book> migrator = new Migrator<Book>(Book.class);
-        migrator.addField("routine", new BlobField());
-        migrator.migrate(context);
+    private void loadRoutine() {
+        lstRoutine = new LinkedList<Integer>();
+        if (routine.get() != null) {
+            ByteBuffer buf = ByteBuffer.wrap(routine.get());
+            while (buf.hasRemaining()) {
+                lstRoutine.add(buf.getInt());
+            }
+        }
     }
-    */
 
 	public String getTitle() {
 		return title.get();
@@ -120,15 +121,16 @@ public class Book extends Model {
 
     public String getRoutine(Context context) {
         StringBuilder sb = new StringBuilder();
-        if (lstRoutine == null || lstRoutine.size() == 0) {
+        if (lstRoutine == null) loadRoutine();
+        if (lstRoutine.size() == 0) {
             return null;
         }
-        sb.append(scriptures.get(context, this).get(routine.get()[0])
+        sb.append(scriptures.get(context, this).get(lstRoutine.get(0))
             .getReference());
-        for (int i = 1; i < routine.get().length; i++) {
+        for (int i = 1; i < lstRoutine.size(); i++) {
             sb.append("\n");
             sb.append(scriptures.get(context, this)
-                    .get(routine.get()[i]).getReference());
+                    .get(lstRoutine.get(i)).getReference());
         }
         return sb.toString();
     }
@@ -146,14 +148,17 @@ public class Book extends Model {
     }
 
     public int getRoutineLength() {
-        return (lstRoutine == null) ? 0 : lstRoutine.size();
+        if (lstRoutine == null) loadRoutine();
+        return lstRoutine.size();
     }
 
     public Scripture current(Context context) {
+        if (lstRoutine == null) loadRoutine();
         return scriptures.get(context, this).get(lstRoutine.element());
     }
 
     public void moveToNext() {
+        if (lstRoutine == null) loadRoutine();
         lstRoutine.remove();
         saveRoutine();
     }
@@ -168,6 +173,5 @@ public class Book extends Model {
             }
             saveRoutine();
         }
-
     }
 }
