@@ -16,7 +16,8 @@ import android.app.Application;
     resDialogCommentPrompt = R.string.crash_dialog_comment_prompt,
     resDialogOkToast = R.string.crash_dialog_ok_toast
     )
-public class SMHelperApp extends Application {
+public class SMApp extends Application {
+    public static final String TAG = "scripturemastery";
 
     @Override
     public void onCreate() {

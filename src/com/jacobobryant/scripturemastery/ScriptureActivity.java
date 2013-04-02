@@ -68,26 +68,25 @@ public class ScriptureActivity extends Activity {
         Paint defaultPaint = ((TextView)
                 inflater.inflate(R.layout.verse, null)).getPaint();
         View scrollView = findViewById(R.id.scroll);
-        Bundle passageBundle;
         int scripId;
         Intent intent = getIntent();
         Context a = getApplication();
         boolean inRoutine;
 
-        inRoutine = intent.getBooleanExtra(MainActivity.EXTRA_IN_ROUTINE, false);
-        scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
+        inRoutine = intent.getBooleanExtra(
+                ScriptureListActivity.EXTRA_IN_ROUTINE, false);
+        scripId = intent.getIntExtra(
+                ScriptureListActivity.EXTRA_SCRIP_ID, -1);
         scripture = Scripture.objects(a).get(scripId);
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.
         try {
-            passageBundle = state.getBundle(PASSAGE_BUNDLE);
+            Bundle passageBundle = state.getBundle(PASSAGE_BUNDLE);
+            passage = new Passage(scripture, defaultPaint,
+                    passageBundle);
         } catch (NullPointerException e) {
-            passageBundle = null;
+            passage = new Passage(scripture, defaultPaint);
         }
-
-        passage = (passageBundle == null) ?
-                new Passage(scripture, defaultPaint) :
-                new Passage(scripture, defaultPaint, passageBundle);
         if (inRoutine) {
             routine = scripture.getBook(a).getRoutine(a);
         }
@@ -128,6 +127,7 @@ public class ScriptureActivity extends Activity {
         return true;
     }
 
+    // todo: get rid of deprecated showDialog calls.
     @SuppressWarnings("deprecation")
 	@Override
     public boolean onOptionsItemSelected(MenuItem item) {

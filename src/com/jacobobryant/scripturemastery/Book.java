@@ -27,6 +27,12 @@ public class Book extends Model {
 		return objects(context, Book.class);
 	}
 
+    public static Book object(Context context, int index) {
+        return objects(context, Book.class).all().limit(index, 1)
+            .toList().get(0);
+    }
+
+
 	public Book() {
 		super();
 		title = new CharField();
@@ -59,7 +65,8 @@ public class Book extends Model {
 	}
 
 	public Scripture getScripture(Context context, int index) {
-		return scriptures.get(context, this).all().toList().get(index);
+		return scriptures.get(context, this).all().limit(index, 1)
+            .toList().get(index);
 	}
 
     public void addScripture(Scripture scrip) {

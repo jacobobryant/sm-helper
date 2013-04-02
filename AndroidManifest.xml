@@ -8,7 +8,7 @@
         android:targetSdkVersion="15" />
 
     <application
-        android:name="SMHelperApp"
+        android:name="SMApp"
         android:icon="@drawable/ic_launcher"
         android:label="@string/title_activity_main"
         android:allowBackup="true" >

@@ -43,7 +43,7 @@ public class KeywordActivity extends Activity
         String selectedRef;
         Intent intent = getIntent();
         int scripId = intent.getIntExtra(
-                MainActivity.EXTRA_SCRIP_ID, -1);
+                ScriptureListActivity.EXTRA_SCRIP_ID, -1);
         Scripture scrip = Scripture.objects(getApplication())
                 .get(scripId);
 

@@ -48,7 +48,7 @@ public class SyncDB {
                 //try {
                     upgradeDB(app);
                 /*} catch (SQLiteException e) {
-                    Log.e(MainActivity.TAG,
+                    Log.e(SMApp.TAG,
                         "Couldn't upgrade old database", e);
                     populate(app);
                 }*/
@@ -166,7 +166,7 @@ public class SyncDB {
                 }
                 reader.close();
             } catch (IOException ioe) {
-                Log.e(MainActivity.TAG, "Couldn't read book data " +
+                Log.e(SMApp.TAG, "Couldn't read book data " +
                     "from file (id = " + id + ")");
             }
             book.save(app);
