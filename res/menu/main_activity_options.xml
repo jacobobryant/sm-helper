@@ -2,7 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/mnuNewPassage"
-        android:title="@string/mnuNewPassage" />
+        android:title="@string/mnuNewPassage"
+        android:showAsAction="ifRoom" />
     <item
         android:id="@+id/mnu_settings"
         android:title="@string/mnu_settings" />

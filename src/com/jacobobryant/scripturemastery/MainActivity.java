@@ -1,12 +1,13 @@
 package com.jacobobryant.scripturemastery;
 
-import android.app.ListActivity;
+import com.actionbarsherlock.app.SherlockListActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -14,7 +15,7 @@ import android.widget.Toast;
 
 import java.util.*;
 
-public class MainActivity extends ListActivity {
+public class MainActivity extends SherlockListActivity {
     public static final String EXTRA_BOOK_ID =
             "com.jacobobryant.scripturemastery.BOOK_ID";
     private static final int NEW_PASSAGE_REQUEST = 0;
@@ -39,7 +40,7 @@ public class MainActivity extends ListActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
+        MenuInflater inflater = getSupportMenuInflater();
         inflater.inflate(R.menu.main_activity_options, menu);
         return true;
     }

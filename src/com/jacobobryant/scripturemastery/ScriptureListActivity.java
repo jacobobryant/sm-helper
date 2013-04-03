@@ -1,8 +1,8 @@
 package com.jacobobryant.scripturemastery;
 
+import com.actionbarsherlock.app.SherlockListActivity;
 import com.orm.androrm.DatabaseAdapter;
 
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,7 +14,7 @@ import android.widget.SimpleAdapter;
 
 import java.util.*;
 
-public class ScriptureListActivity extends ListActivity {
+public class ScriptureListActivity extends SherlockListActivity {
     public static final String EXTRA_BOOK_ID =
             "com.jacobobryant.scripturemastery.BOOK_ID";
     public static final String EXTRA_SCRIP_ID =
@@ -52,16 +52,13 @@ public class ScriptureListActivity extends ListActivity {
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
     }
 
-    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
+        MenuInflater inflater = getSupportMenuInflater();
         inflater.inflate(R.menu.scripture_list_activity_options, menu);
         return true;
     }
-    */
 
-    /*
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
@@ -74,7 +71,6 @@ public class ScriptureListActivity extends ListActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-    */
 
     @Override
     public void onActivityResult(int requestCode, int resultCode,

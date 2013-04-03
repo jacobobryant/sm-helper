@@ -1,16 +1,16 @@
 package com.jacobobryant.scripturemastery;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.actionbarsherlock.app.SherlockActivity;
 
-import android.app.Activity;
 import android.os.Bundle;
-
 import android.view.View;
 import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-public class NewPassageActivity extends Activity {
+import java.util.ArrayList;
+import java.util.List;
+
+public class NewPassageActivity extends SherlockActivity {
     private List<Integer> bookIds;
 
     private class GroupSelectionListener

@@ -1,9 +1,10 @@
 package com.jacobobryant.scripturemastery;
 
-import android.os.Bundle;
-import android.preference.PreferenceActivity;
+import com.actionbarsherlock.app.SherlockPreferenceActivity;
 
-public class SettingsActivity extends PreferenceActivity {
+import android.os.Bundle;
+
+public class SettingsActivity extends SherlockPreferenceActivity {
     public static final String KEYWORDS = "pref_keywords";
 
     @SuppressWarnings("deprecation")

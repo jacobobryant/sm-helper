@@ -9,6 +9,7 @@
 
     <application
         android:name="SMApp"
+        android:theme="@style/Theme.Sherlock"
         android:icon="@drawable/ic_launcher"
         android:label="@string/title_activity_main"
         android:allowBackup="true" >

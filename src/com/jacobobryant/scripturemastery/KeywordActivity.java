@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
-import android.app.Activity;
+import com.actionbarsherlock.app.SherlockActivity;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,7 +10,7 @@ import android.widget.*;
 
 import java.util.*;
 
-public class KeywordActivity extends Activity
+public class KeywordActivity extends SherlockActivity
         implements View.OnClickListener {
     private final String CHOICES_KEY = "references";
     private final String SELECTED_KEY = "selected";

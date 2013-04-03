@@ -1,18 +1,26 @@
 package com.jacobobryant.scripturemastery;
 
-import android.app.*;
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.SystemClock;
-
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class ScriptureActivity extends Activity {
+public class ScriptureActivity extends SherlockActivity {
     public static final String PASSAGE_BUNDLE = "passageBundle";
     public static final int RESULT_MEMORIZED = RESULT_FIRST_USER;
     public static final int RESULT_PARTIALLY_MEMORIZED =
@@ -110,7 +118,7 @@ public class ScriptureActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
+        MenuInflater inflater = getSupportMenuInflater();
         inflater.inflate(R.menu.scripture_activity_options, menu);
         return true;
     }
