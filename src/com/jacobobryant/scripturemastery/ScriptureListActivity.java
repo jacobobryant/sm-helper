@@ -1,6 +1,10 @@
 package com.jacobobryant.scripturemastery;
 
 import com.actionbarsherlock.app.SherlockListActivity;
+
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.orm.androrm.DatabaseAdapter;
 
 import android.content.Context;
@@ -60,9 +64,27 @@ public class ScriptureListActivity extends SherlockListActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Book book = Book.objects(getApplication()).get(bookId);
+        if (book.getRoutineLength() != 0) {
+            menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
+        }
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Book book = Book.objects(getApplication()).get(bookId);
         Intent intent;
+
         switch (item.getItemId()) {
+            case R.id.mnuStartRoutine:
+                book.createRoutine(getApplication());
+                book.save(getApplication());
+            case R.id.mnuContinueRoutine:
+                curScripId = book.current(getApplication()).getId();
+                startScripture();
+                return true;
             case R.id.mnu_settings:
                 intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);

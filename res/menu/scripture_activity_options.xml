@@ -2,14 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/mnuIncreaseLevel"
-        android:title="@string/mnuIncreaseLevel"
-        android:showAsAction="ifRoom" />
+        android:title="@string/mnuIncreaseLevel" />
     <item
         android:id="@+id/mnuDone"
-        android:title="@string/mnuDone"
-        android:showAsAction="ifRoom" />
+        android:title="@string/mnuDone" />
     <item
         android:id="@+id/mnuRoutine"
-        android:title="@string/mnuRoutine"
-        android:showAsAction="ifRoom" />
+        android:title="@string/mnuRoutine" />
+    <item
+        android:id="@+id/mnu_settings"
+        android:title="@string/mnu_settings" />
 </menu>

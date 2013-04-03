@@ -126,7 +126,7 @@ public class ScriptureActivity extends SherlockActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        if (! passage.hasMoreLevels()) {
+        if (!passage.hasMoreLevels()) {
             menu.findItem(R.id.mnuIncreaseLevel).setVisible(false);
         }
         if (routine == null) {
@@ -149,6 +149,10 @@ public class ScriptureActivity extends SherlockActivity {
                 return true;
             case R.id.mnuRoutine:
                 showDialog(ROUTINE_DIALOG);
+                return true;
+            case R.id.mnu_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

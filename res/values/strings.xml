@@ -1,11 +1,9 @@
 <resources>
 <string name="app_name">SM Helper</string>
 <string name="title_activity_main">Scripture Mastery Helper</string>
-<string name="mnuIncreaseLevel">Increase Level</string>
-<string name="mnuDecreaseLevel">Decrease Level</string>
-<string name="mnuAddPassage">Add</string>
-<string name="mnuStartRoutine">Start New Routine</string>
-<string name="mnuContinueRoutine">Continue Routine</string>
+<string name="mnuIncreaseLevel">Next Level</string>
+<string name="mnuStartRoutine">New Routine</string>
+<string name="mnuContinueRoutine">Continue</string>
 <string name="mnuRoutine">View Routine</string>
 <string name="mnuNewPassage">Add Passage</string>
 <string name="txtPassageHint">Passage text</string>
