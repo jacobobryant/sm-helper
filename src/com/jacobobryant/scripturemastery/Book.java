@@ -66,7 +66,7 @@ public class Book extends Model {
 
 	public Scripture getScripture(Context context, int index) {
 		return scriptures.get(context, this).all().limit(index, 1)
-            .toList().get(index);
+            .toList().get(0);
 	}
 
     public void addScripture(Scripture scrip) {

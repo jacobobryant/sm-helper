@@ -6,12 +6,15 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.orm.androrm.DatabaseAdapter;
+import com.orm.androrm.Filter;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+
+import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -33,6 +36,7 @@ public class ScriptureListActivity extends SherlockListActivity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         bookId = getIntent().getIntExtra(
                 MainActivity.EXTRA_BOOK_ID, -1);
         if (bookId == -1) finish();
@@ -48,9 +52,10 @@ public class ScriptureListActivity extends SherlockListActivity {
     @Override
     public void onListItemClick(ListView listView, View v,
             int index, long id) {
-        Context app = getApplication();
-        Book book = Book.objects(app).get(bookId);
-        int scripId = book.getScripture(app, index).getId();
+        Log.d(SMApp.TAG, "index = " + index);
+        int scripId = Scripture.objects(getApplication()).all().filter(
+            new Filter().is("book__mId", bookId)).limit(index, 1)
+            .toList().get(0).getId();
         Intent intent = new Intent(this, ScriptureActivity.class);
         intent.putExtra(EXTRA_SCRIP_ID, scripId);
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
@@ -78,6 +83,10 @@ public class ScriptureListActivity extends SherlockListActivity {
         Intent intent;
 
         switch (item.getItemId()) {
+            case android.R.id.home:
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+                return true;
             case R.id.mnuStartRoutine:
                 book.createRoutine(getApplication());
                 book.save(getApplication());

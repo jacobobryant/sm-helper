@@ -32,6 +32,7 @@ public class ScriptureActivity extends SherlockActivity {
     private String routine;
     private Passage passage;
     int progress;
+    int scripId;
 
     public class TouchListener implements OnTouchListener {
         public boolean onTouch(View v, MotionEvent event) {
@@ -76,11 +77,11 @@ public class ScriptureActivity extends SherlockActivity {
         Paint defaultPaint = ((TextView)
                 inflater.inflate(R.layout.verse, null)).getPaint();
         View scrollView = findViewById(R.id.scroll);
-        int scripId;
         Intent intent = getIntent();
         Context a = getApplication();
         boolean inRoutine;
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         inRoutine = intent.getBooleanExtra(
                 ScriptureListActivity.EXTRA_IN_ROUTINE, false);
         scripId = intent.getIntExtra(
@@ -140,6 +141,14 @@ public class ScriptureActivity extends SherlockActivity {
 	@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                Intent parent = new Intent(this, ScriptureListActivity.class);
+                int bookId = Scripture.objects(getApplication()).get(scripId)
+                    .getBook(getApplication()).getId();
+                parent.putExtra(MainActivity.EXTRA_BOOK_ID, bookId);
+                startActivity(parent);
+                finish();
+                return true;
             case R.id.mnuIncreaseLevel:
                 passage.increaseLevel();
                 setText();
