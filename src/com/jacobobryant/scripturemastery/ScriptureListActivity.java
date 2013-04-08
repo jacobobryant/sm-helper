@@ -1,11 +1,9 @@
 package com.jacobobryant.scripturemastery;
 
 import com.actionbarsherlock.app.SherlockListActivity;
-
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.orm.androrm.DatabaseAdapter;
 import com.orm.androrm.Filter;
 
 import android.content.Context;
@@ -13,7 +11,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
@@ -53,11 +50,11 @@ public class ScriptureListActivity extends SherlockListActivity {
     public void onListItemClick(ListView listView, View v,
             int index, long id) {
         Log.d(SMApp.TAG, "index = " + index);
-        int scripId = Scripture.objects(getApplication()).all().filter(
+        curScripId = Scripture.objects(getApplication()).all().filter(
             new Filter().is("book__mId", bookId)).limit(index, 1)
             .toList().get(0).getId();
         Intent intent = new Intent(this, ScriptureActivity.class);
-        intent.putExtra(EXTRA_SCRIP_ID, scripId);
+        intent.putExtra(EXTRA_SCRIP_ID, curScripId);
         startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
     }
 
@@ -121,13 +118,16 @@ public class ScriptureListActivity extends SherlockListActivity {
             case LEARN_SCRIPTURE_REQUEST:
                 switch (resultCode) {
                     case ScriptureActivity.RESULT_MASTERED:
-                        moveForward(Scripture.MASTERED);
+                        commit(Scripture.MASTERED);
+                        moveForward();
                         break;
                     case ScriptureActivity.RESULT_MEMORIZED:
-                        moveForward(Scripture.MEMORIZED);
+                        commit(Scripture.MEMORIZED);
+                        moveForward();
                         break;
                     case ScriptureActivity.RESULT_PARTIALLY_MEMORIZED:
-                        moveForward(Scripture.PARTIALLY_MEMORIZED);
+                        commit(Scripture.PARTIALLY_MEMORIZED);
+                        moveForward();
                         break;
                     default:
                         curScripId = -1;
@@ -150,8 +150,8 @@ public class ScriptureListActivity extends SherlockListActivity {
         Map<String, String> map;
         Context app = getApplication();
 
-        for (Scripture scrip : Book.objects(app).get(bookId)
-                .getScriptures(app).all()) {
+        for (Scripture scrip : Scripture.objects(app).filter(
+                new Filter().is("book__mId", bookId))) {
             map = new HashMap<String, String>();
             map.put(NAME, scrip.getReference());
             map.put(STATUS, getStatusString(scrip.getStatus()));
@@ -178,25 +178,27 @@ public class ScriptureListActivity extends SherlockListActivity {
         }
     }
 
-    private void moveForward(int status) {
+    private void commit(int status) {
         Context a = getApplication();
-        Book book = Book.objects(a).get(bookId);
         Scripture curScripture = Scripture.objects(a).get(curScripId);
-        DatabaseAdapter adapter = DatabaseAdapter.getInstance(a);
-
-        adapter.beginTransaction();
         curScripture.setProgress(status);
         curScripture.save(a);
-        book.moveToNext();
-        book.save(a);
-        adapter.commitTransaction();
+    }
+
+    private void moveForward() {
+        Context a = getApplication();
+        Book book = Book.objects(a).get(bookId);
         if (book.getRoutineLength() > 0) {
-            curScripId = book.current(a).getId();
-            startScripture();
-        } else {
-            curScripId = -1;
-            // needed to update the status part
-            buildList();
+            book.moveToNext();
+            book.save(a);
+            if (book.getRoutineLength() > 0) {
+                curScripId = book.current(a).getId();
+                startScripture();
+            } else {
+                curScripId = -1;
+                // needed to update the status part
+                buildList();
+            }
         }
     }
 
