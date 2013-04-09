@@ -5,4 +5,9 @@
         android:title="@string/pref_keywords"
         android:summary="@string/pref_keywords_summ"
         android:defaultValue="true" />
+    <CheckBoxPreference
+        android:key="pref_reporting"
+        android:title="@string/pref_reporting"
+        android:summary="@string/pref_reporting_summ"
+        android:defaultValue="true" />
 </PreferenceScreen>

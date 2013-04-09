@@ -6,6 +6,10 @@ import org.acra.ReportingInteractionMode;
 
 import android.app.Application;
 
+import android.content.SharedPreferences;
+
+import android.preference.PreferenceManager;
+
 @ReportsCrashes(
     formKey="",
     mailTo = "tooke@gmx.com",
@@ -22,6 +26,10 @@ public class SMApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (!BuildConfig.DEBUG) ACRA.init(this);
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        boolean reporting =
+            prefs.getBoolean(SettingsActivity.REPORTING, true);
+        if (reporting) ACRA.init(this);
     }
 }

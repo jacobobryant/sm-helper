@@ -42,6 +42,10 @@ public class MainActivity extends SherlockListActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getSupportMenuInflater();
         inflater.inflate(R.menu.main_activity_options, menu);
+        if (BuildConfig.DEBUG) {
+            MenuItem mnuCrash = menu.findItem(R.id.mnu_crash);
+            mnuCrash.setVisible(true);
+        }
         return true;
     }
 
@@ -57,6 +61,8 @@ public class MainActivity extends SherlockListActivity {
                 intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.mnu_crash:
+                return (1 / 0 == 0);
             default:
                 return super.onOptionsItemSelected(item);
         }

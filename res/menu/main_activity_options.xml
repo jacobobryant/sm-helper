@@ -6,4 +6,8 @@
     <item
         android:id="@+id/mnu_settings"
         android:title="@string/mnu_settings" />
+    <item
+        android:id="@+id/mnu_crash"
+        android:title="@string/mnu_crash"
+        android:visible="false" />
 </menu>
