@@ -1,13 +1,20 @@
 package com.jacobobryant.scripturemastery;
 
+import com.orm.androrm.DatabaseAdapter;
+
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
@@ -77,6 +84,47 @@ public class MainActivity extends ListActivity {
             buildList();
             Toast.makeText(this, getString(R.string.passageAdded),
                     Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        AdapterView.AdapterContextMenuInfo info =
+            (AdapterView.AdapterContextMenuInfo) menuInfo;
+        MenuInflater inflater = getMenuInflater();
+        Book book = Book.object(getApplication(), info.position);
+
+        if (!book.getPreloaded()) {
+            inflater.inflate(R.menu.delete_menu, menu);
+            menu.setHeaderTitle(book.getTitle());
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        Context app = getApplication();
+        AdapterView.AdapterContextMenuInfo info =
+            (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        Book book = Book.object(app, info.position);
+        DatabaseAdapter adapter;
+
+        switch (item.getItemId()) {
+            case R.id.mnuDelete:
+                adapter = DatabaseAdapter.getInstance(app);
+                adapter.beginTransaction();
+                for (Scripture scrip : book.getScriptures(app).all()) {
+                    scrip.delete(app);
+                }
+                book.delete(app);
+                adapter.commitTransaction();
+                buildList();
+                Toast.makeText(this, R.string.group_deleted,
+                        Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onContextItemSelected(item);
         }
     }
 

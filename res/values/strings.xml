@@ -18,7 +18,7 @@
 <string name="passageAdded">Passage added successfully.</string>
 <string name="delete">Delete</string>
 <string name="passageDeleted">Passage deleted successfully.</string>
-<string name="groupDeleted">Group deleted successfully.</string>
+<string name="group_deleted">Group deleted successfully.</string>
 <string name="newPassageLabel">Add New Passage</string>
 <string name="mnuDone">Done</string>
 <string name="progressDialog">How well do you know this passage now?</string>
