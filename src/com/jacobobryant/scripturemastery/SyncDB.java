@@ -35,12 +35,12 @@ public class SyncDB {
 
     public static void syncDB(Context app) {
         final String DB_NAME = "sm.db";
-    	List<Class<? extends Model>> models =
+        List<Class<? extends Model>> models =
                 new ArrayList<Class<? extends Model>>();
 
-    	models.add(Book.class);
-    	models.add(Scripture.class);
-    	DatabaseAdapter.setDatabaseName(DB_NAME);
+        models.add(Book.class);
+        models.add(Scripture.class);
+        DatabaseAdapter.setDatabaseName(DB_NAME);
         DatabaseAdapter.getInstance(app)
                 .setModels(models);
         if (Book.objects(app).count() == 0) {

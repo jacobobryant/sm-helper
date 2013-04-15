@@ -1,10 +1,8 @@
 package com.jacobobryant.scripturemastery;
 
-import com.actionbarsherlock.app.SherlockListActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.orm.androrm.Filter;
+
+import android.app.ListActivity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,13 +10,16 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 import java.util.*;
 
-public class ScriptureListActivity extends SherlockListActivity {
+public class ScriptureListActivity extends ListActivity {
     public static final String EXTRA_BOOK_ID =
             "com.jacobobryant.scripturemastery.BOOK_ID";
     public static final String EXTRA_SCRIP_ID =
@@ -33,10 +34,11 @@ public class ScriptureListActivity extends SherlockListActivity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         bookId = getIntent().getIntExtra(
                 MainActivity.EXTRA_BOOK_ID, -1);
         if (bookId == -1) finish();
+        setTitle(Book.objects(getApplication()).get(bookId).getTitle());
         buildList();
         try {
             curScripId = state.getInt(EXTRA_SCRIP_ID);
@@ -60,7 +62,7 @@ public class ScriptureListActivity extends SherlockListActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.scripture_list_activity_options, menu);
         return true;
     }
@@ -80,10 +82,11 @@ public class ScriptureListActivity extends SherlockListActivity {
         Intent intent;
 
         switch (item.getItemId()) {
+            /*
             case android.R.id.home:
-                startActivity(new Intent(this, MainActivity.class));
                 finish();
                 return true;
+                */
             case R.id.mnuStartRoutine:
                 book.createRoutine(getApplication());
                 book.save(getApplication());

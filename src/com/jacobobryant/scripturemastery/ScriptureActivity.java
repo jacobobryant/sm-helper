@@ -1,10 +1,6 @@
 package com.jacobobryant.scripturemastery;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -14,13 +10,16 @@ import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class ScriptureActivity extends SherlockActivity {
+public class ScriptureActivity extends Activity {
     public static final String PASSAGE_BUNDLE = "passageBundle";
     public static final int RESULT_MEMORIZED = RESULT_FIRST_USER;
     public static final int RESULT_PARTIALLY_MEMORIZED =
@@ -81,7 +80,7 @@ public class ScriptureActivity extends SherlockActivity {
         Context a = getApplication();
         boolean inRoutine;
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         inRoutine = intent.getBooleanExtra(
                 ScriptureListActivity.EXTRA_IN_ROUTINE, false);
         scripId = intent.getIntExtra(
@@ -119,7 +118,7 @@ public class ScriptureActivity extends SherlockActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.scripture_activity_options, menu);
         return true;
     }
@@ -138,17 +137,14 @@ public class ScriptureActivity extends SherlockActivity {
 
     // todo: get rid of deprecated showDialog calls.
     @SuppressWarnings("deprecation")
-	@Override
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            /*
             case android.R.id.home:
-                Intent parent = new Intent(this, ScriptureListActivity.class);
-                int bookId = Scripture.objects(getApplication()).get(scripId)
-                    .getBook(getApplication()).getId();
-                parent.putExtra(MainActivity.EXTRA_BOOK_ID, bookId);
-                startActivity(parent);
                 finish();
                 return true;
+                */
             case R.id.mnuIncreaseLevel:
                 passage.increaseLevel();
                 setText();

@@ -1,6 +1,6 @@
 package com.jacobobryant.scripturemastery;
 
-import com.actionbarsherlock.app.SherlockActivity;
+import android.app.Activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +10,7 @@ import android.widget.*;
 
 import java.util.*;
 
-public class KeywordActivity extends SherlockActivity
+public class KeywordActivity extends Activity
         implements View.OnClickListener {
     private final String CHOICES_KEY = "references";
     private final String SELECTED_KEY = "selected";
@@ -48,6 +48,7 @@ public class KeywordActivity extends SherlockActivity
         Scripture scrip = Scripture.objects(getApplication())
                 .get(scripId);
 
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mode = (new Random().nextInt(2) == 0) ?
                 Mode.GUESS_REFERENCE : Mode.GUESS_KEYWORD;
         radioGroup = (RadioGroup) findViewById(R.id.radio_group);
@@ -97,6 +98,19 @@ public class KeywordActivity extends SherlockActivity
         }
         super.onSaveInstanceState(state);
     }
+
+    /*
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+    */
 
     public List<String> getChoices(Scripture scrip) {
         final int NUMCHOICES = 6;

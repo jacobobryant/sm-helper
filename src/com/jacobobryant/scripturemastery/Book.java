@@ -23,24 +23,23 @@ public class Book extends Model {
     protected BooleanField preloaded;
     private LinkedList<Integer> lstRoutine;
 
-	public static final QuerySet<Book> objects(Context context) {
-		return objects(context, Book.class);
-	}
+    public static final QuerySet<Book> objects(Context context) {
+        return objects(context, Book.class);
+    }
 
     public static Book object(Context context, int index) {
         return objects(context, Book.class).all().limit(index, 1)
             .toList().get(0);
     }
 
-
-	public Book() {
-		super();
-		title = new CharField();
+    public Book() {
+        super();
+        title = new CharField();
         preloaded = new BooleanField();
         routine = new BlobField();
-		scriptures = new OneToManyField<Book, Scripture>(
+        scriptures = new OneToManyField<Book, Scripture>(
                 Book.class, Scripture.class);
-	}
+    }
 
     private void loadRoutine() {
         lstRoutine = new LinkedList<Integer>();
@@ -52,27 +51,27 @@ public class Book extends Model {
         }
     }
 
-	public String getTitle() {
-		return title.get();
-	}
+    public String getTitle() {
+        return title.get();
+    }
 
     public void setTitle(String title) {
         this.title.set(title);
     }
-	
-	public QuerySet<Scripture> getScriptures(Context context) {
-		return scriptures.get(context, this);
-	}
+    
+    public QuerySet<Scripture> getScriptures(Context context) {
+        return scriptures.get(context, this);
+    }
 
-	public Scripture getScripture(Context context, int index) {
-		return scriptures.get(context, this).all().limit(index, 1)
+    public Scripture getScripture(Context context, int index) {
+        return scriptures.get(context, this).all().limit(index, 1)
             .toList().get(0);
-	}
+    }
 
     public void addScripture(Scripture scrip) {
         scriptures.add(scrip);
     }
-	
+    
     public boolean getPreloaded() {
         return preloaded.get();
     }

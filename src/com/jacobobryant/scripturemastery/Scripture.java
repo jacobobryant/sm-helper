@@ -54,7 +54,7 @@ public class Scripture extends Model {
         this(reference, keywords, verses, NOT_STARTED, 0);
     }
 
-	public String getReference() {
+    public String getReference() {
         return reference.get();
     }
 
@@ -62,13 +62,13 @@ public class Scripture extends Model {
         return new String(verses.get());
     }
 
-	public int getStatus() {
-		return status.get();
-	}
+    public int getStatus() {
+        return status.get();
+    }
 
-	public int getFinishedStreak() {
-		return finishedStreak.get();
-	}
+    public int getFinishedStreak() {
+        return finishedStreak.get();
+    }
 
     public void setProgress(int progress) {
         switch (progress) {
@@ -137,10 +137,10 @@ public class Scripture extends Model {
         return keywords.get();
     }
 
-	@Override
-	public String toString() {
-		return "Scripture [reference=" + reference + ", keywords=" + keywords
-				+ ", verses=" + verses + ", status=" + status
-				+ ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
-	}
+    @Override
+    public String toString() {
+        return "Scripture [reference=" + reference + ", keywords=" + keywords
+                + ", verses=" + verses + ", status=" + status
+                + ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
+    }
 }
