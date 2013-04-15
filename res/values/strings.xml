@@ -17,7 +17,7 @@
 <string name="noPassageError">You must include text to be memorized.</string>
 <string name="passageAdded">Passage added successfully.</string>
 <string name="delete">Delete</string>
-<string name="passageDeleted">Passage deleted successfully.</string>
+<string name="passage_deleted">Passage deleted successfully.</string>
 <string name="group_deleted">Group deleted successfully.</string>
 <string name="newPassageLabel">Add New Passage</string>
 <string name="mnuDone">Done</string>
@@ -47,5 +47,6 @@
 <string name="pref_reporting">Crash Reporting</string>
 <string name="pref_reporting_summ">Enable reports by email (restart required).</string>
 <string name="mnu_crash">Crash</string>
+<string name="dialog_delete">Delete %s?</string>
 
 </resources>

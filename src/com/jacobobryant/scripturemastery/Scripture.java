@@ -5,6 +5,7 @@ import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.ForeignKeyField;
 import com.orm.androrm.field.IntegerField;
 
+import com.orm.androrm.Filter;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
@@ -38,6 +39,12 @@ public class Scripture extends Model {
 
     public static final QuerySet<Scripture> objects(Context context) {
         return objects(context, Scripture.class);
+    }
+
+    public static Scripture object(Context context, int bookId,
+            int index) {
+        return objects(context, Scripture.class).filter(new Filter()
+            .is("book__mId", bookId)).limit(index, 1).toList().get(0);
     }
 
     public Scripture(String reference, String keywords,

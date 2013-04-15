@@ -2,13 +2,15 @@ package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.DatabaseAdapter;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
-
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +27,8 @@ public class MainActivity extends ListActivity {
     public static final String EXTRA_BOOK_ID =
             "com.jacobobryant.scripturemastery.BOOK_ID";
     private static final int NEW_PASSAGE_REQUEST = 0;
+    private final int DELETE_DIALOG = 0;
+    private Book deleteBook;
     
     @Override
     public void onCreate(Bundle state) {
@@ -32,6 +36,7 @@ public class MainActivity extends ListActivity {
         Log.d(SMApp.TAG, "Entering SM Helper");
         SyncDB.syncDB(getApplication());
         buildList();
+        registerForContextMenu(getListView());
     }
 
     @Override
@@ -102,30 +107,63 @@ public class MainActivity extends ListActivity {
         }
     }
 
+    // the support library doesn't have a FragmentListActivity, so we have
+    // to use the deprecated showDialog method
+    @SuppressWarnings("deprecation")
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        Context app = getApplication();
         AdapterView.AdapterContextMenuInfo info =
             (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        Book book = Book.object(app, info.position);
-        DatabaseAdapter adapter;
+        deleteBook = Book.object(getApplication(), info.position);
 
         switch (item.getItemId()) {
             case R.id.mnuDelete:
-                adapter = DatabaseAdapter.getInstance(app);
-                adapter.beginTransaction();
-                for (Scripture scrip : book.getScriptures(app).all()) {
-                    scrip.delete(app);
-                }
-                book.delete(app);
-                adapter.commitTransaction();
-                buildList();
-                Toast.makeText(this, R.string.group_deleted,
-                        Toast.LENGTH_SHORT).show();
+                showDialog(DELETE_DIALOG);
                 return true;
             default:
                 return super.onContextItemSelected(item);
         }
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        switch (id) {
+            case DELETE_DIALOG:
+                builder.setMessage(String.format(getString(
+                        R.string.dialog_delete), deleteBook.getTitle()))
+                    .setPositiveButton(R.string.delete,
+                            new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                int id) {
+                            deleteGroup();
+                            deleteBook = null;
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                int id) {
+                            deleteBook = null;
+                        }
+                    });
+                break;
+        }
+        return builder.create();
+    }
+
+    private void deleteGroup() {
+        Context app = getApplication();
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        adapter.beginTransaction();
+        for (Scripture scrip : deleteBook.getScriptures(app).all()) {
+            scrip.delete(app);
+        }
+        deleteBook.delete(app);
+        adapter.commitTransaction();
+        buildList();
+        Toast.makeText(this, R.string.group_deleted,
+                Toast.LENGTH_SHORT).show();
     }
 
     private void buildList() {

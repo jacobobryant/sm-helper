@@ -2,20 +2,26 @@ package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.Filter;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
-
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import java.util.*;
 
@@ -28,8 +34,10 @@ public class ScriptureListActivity extends ListActivity {
             "com.jacobobryant.scripturemastery.IN_ROUTINE";
     private static final int LEARN_SCRIPTURE_REQUEST = 0;
     private static final int LEARN_KEYWORD_REQUEST = 1;
+    private final int DELETE_DIALOG = 0;
     private int bookId;
     private int curScripId;
+    private Scripture deleteScrip;
     
     @Override
     public void onCreate(Bundle state) {
@@ -143,6 +151,72 @@ public class ScriptureListActivity extends ListActivity {
     public void onSaveInstanceState(Bundle state) {
         state.putInt(EXTRA_SCRIP_ID, curScripId);
         super.onSaveInstanceState(state);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        Book book = Book.objects(getApplication()).get(bookId);
+
+        if (!book.getPreloaded()) {
+            inflater.inflate(R.menu.delete_menu, menu);
+            menu.setHeaderTitle(book.getTitle());
+        }
+    }
+
+    // the support library doesn't have a FragmentListActivity, so we have
+    // to use the deprecated showDialog method
+    @SuppressWarnings("deprecation")
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info =
+            (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        deleteScrip = Scripture.object(getApplication(), bookId,
+                info.position);
+
+        switch (item.getItemId()) {
+            case R.id.mnuDelete:
+                showDialog(DELETE_DIALOG);
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        switch (id) {
+            case DELETE_DIALOG:
+                builder.setMessage(String.format(getString(R.string.
+                        dialog_delete), deleteScrip.getReference()))
+                    .setPositiveButton(R.string.delete,
+                            new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                int id) {
+                            deletePassage();
+                            deleteScrip = null;
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                int id) {
+                            deleteScrip = null;
+                        }
+                    });
+                break;
+        }
+        return builder.create();
+    }
+
+    private void deletePassage() {
+        deleteScrip.delete(getApplication());
+        buildList();
+        Toast.makeText(this, R.string.passage_deleted,
+                Toast.LENGTH_SHORT).show();
     }
 
     private void buildList() {
