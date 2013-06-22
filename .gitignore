@@ -3,3 +3,4 @@ gen/
 local.properties
 startapp
 .local.vim
+ant.properties
