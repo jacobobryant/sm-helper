@@ -84,8 +84,9 @@ public class Book extends Model {
         if (scriptures.get(context, this).isEmpty()) {
             throw new UnsupportedOperationException("this book is empty");
         }
-        return (scriptures.get(context, this).all().limit(1).toList()
-                .get(0).getKeywords().length() != 0);
+        String keywords = scriptures.get(context, this).all().limit(1)
+            .toList().get(0).getKeywords();
+        return (keywords != null && keywords.length() != 0);
     }
 
     public void createRoutine(Context context) {

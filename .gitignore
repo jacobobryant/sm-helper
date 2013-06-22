@@ -4,3 +4,4 @@ local.properties
 startapp
 .local.vim
 ant.properties
+.local.vim

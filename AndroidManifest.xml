@@ -27,8 +27,8 @@
             android:name="KeywordActivity"
             android:label="@string/keywordLabel" />
         <activity android:name="SettingsActivity" />
+        <!--android:theme="@android:style/Theme.Dialog"-->
         <activity android:name="org.acra.CrashReportDialog"
-            android:theme="@android:style/Theme.Dialog"
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:finishOnTaskLaunch="true" />
