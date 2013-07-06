@@ -6,9 +6,13 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+
+import android.database.sqlite.SQLiteException;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.SystemClock;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -68,6 +72,7 @@ public class ScriptureActivity extends Activity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        Log.d(SMApp.TAG, "ScriptureActivity.onCreate()");
         setContentView(R.layout.scripture_activity);
         LayoutInflater inflater = LayoutInflater.from(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.layout);
@@ -85,7 +90,12 @@ public class ScriptureActivity extends Activity {
                 ScriptureListActivity.EXTRA_IN_ROUTINE, false);
         scripId = intent.getIntExtra(
                 ScriptureListActivity.EXTRA_SCRIP_ID, -1);
-        scripture = Scripture.objects(a).get(scripId);
+        try {
+            scripture = Scripture.objects(a).get(scripId);
+        } catch (SQLiteException e) {
+            Log.e(SMApp.TAG, "well this sucks");
+            throw e;
+        }
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.
         try {
@@ -108,6 +118,12 @@ public class ScriptureActivity extends Activity {
         scrollView.setOnTouchListener(new TouchListener());
         setText();
         progress = RESULT_MEMORIZED;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(SMApp.TAG, "ScriptureActivity.onResume()");
     }
 
     @Override

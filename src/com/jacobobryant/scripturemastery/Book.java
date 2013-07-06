@@ -10,7 +10,6 @@ import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.BooleanField;
 import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.OneToManyField;
-
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
@@ -138,6 +137,21 @@ public class Book extends Model {
             sb.append("\n");
             sb.append(scriptures.get(context, this)
                     .get(lstRoutine.get(i)).getReference());
+        }
+        return sb.toString();
+    }
+
+    public String getDebugRoutine(Context context) {
+        StringBuilder sb = new StringBuilder();
+        if (lstRoutine == null) {
+            loadRoutine();
+        }
+        if (lstRoutine.size() == 0) {
+            return "empty";
+        }
+        for (int index : lstRoutine) {
+            sb.append(index);
+            sb.append(' ');
         }
         return sb.toString();
     }

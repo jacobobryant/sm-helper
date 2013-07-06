@@ -38,10 +38,12 @@ public class ScriptureListActivity extends ListActivity {
     private int bookId;
     private int curScripId;
     private Scripture deleteScrip;
+    private boolean inRoutine;
     
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        Log.d(SMApp.TAG, "ScriptureListActivity.onCreate()");
         //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         bookId = getIntent().getIntExtra(
                 MainActivity.EXTRA_BOOK_ID, -1);
@@ -53,7 +55,18 @@ public class ScriptureListActivity extends ListActivity {
         } catch (NullPointerException e) {
             curScripId = -1;
         }
+        try {
+            inRoutine = state.getBoolean(EXTRA_IN_ROUTINE);
+        } catch (NullPointerException e) {
+            inRoutine = false;
+        }
         registerForContextMenu(getListView());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(SMApp.TAG, "ScriptureListActivity.onResume()");
     }
 
     @Override
@@ -78,9 +91,8 @@ public class ScriptureListActivity extends ListActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         Book book = Book.objects(getApplication()).get(bookId);
-        if (book.getRoutineLength() != 0) {
-            menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
-        }
+        menu.findItem(R.id.mnuContinueRoutine)
+            .setVisible(book.getRoutineLength() != 0);
         return true;
     }
 
@@ -99,7 +111,9 @@ public class ScriptureListActivity extends ListActivity {
                 book.createRoutine(getApplication());
                 book.save(getApplication());
             case R.id.mnuContinueRoutine:
+                Log.d(SMApp.TAG, book.getDebugRoutine(getApplication()));
                 curScripId = book.current(getApplication()).getId();
+                inRoutine = true;
                 startScripture();
                 return true;
             case R.id.mnu_settings:
@@ -129,6 +143,20 @@ public class ScriptureListActivity extends ListActivity {
             case LEARN_SCRIPTURE_REQUEST:
                 switch (resultCode) {
                     case ScriptureActivity.RESULT_MASTERED:
+                    case ScriptureActivity.RESULT_MEMORIZED:
+                    case ScriptureActivity.RESULT_PARTIALLY_MEMORIZED:
+                        commit(resultCode);
+                        if (inRoutine) {
+                            moveForward();
+                        }
+                        break;
+                    default:
+                        inRoutine = false;
+                        curScripId = -1;
+                }
+                /*
+                switch (resultCode) {
+                    case ScriptureActivity.RESULT_MASTERED:
                         commit(Scripture.MASTERED);
                         moveForward();
                         break;
@@ -143,6 +171,7 @@ public class ScriptureListActivity extends ListActivity {
                     default:
                         curScripId = -1;
                 }
+                */
                 break;
         }
     }
@@ -150,6 +179,7 @@ public class ScriptureListActivity extends ListActivity {
     @Override
     public void onSaveInstanceState(Bundle state) {
         state.putInt(EXTRA_SCRIP_ID, curScripId);
+        state.putBoolean(EXTRA_IN_ROUTINE, inRoutine);
         super.onSaveInstanceState(state);
     }
 
@@ -255,10 +285,18 @@ public class ScriptureListActivity extends ListActivity {
         }
     }
 
-    private void commit(int status) {
+    private void commit(int returnCode) {
         Context a = getApplication();
         Scripture curScripture = Scripture.objects(a).get(curScripId);
-        curScripture.setProgress(status);
+        Map<Integer, Integer> results = new HashMap<Integer, Integer>();
+        results.put(ScriptureActivity.RESULT_MASTERED,
+                Scripture.MASTERED);
+        results.put(ScriptureActivity.RESULT_MEMORIZED,
+                Scripture.MEMORIZED);
+        results.put(ScriptureActivity.RESULT_PARTIALLY_MEMORIZED,
+                Scripture.PARTIALLY_MEMORIZED);
+
+        curScripture.setProgress(results.get(returnCode));
         curScripture.save(a);
     }
 
@@ -273,8 +311,10 @@ public class ScriptureListActivity extends ListActivity {
                 startScripture();
             } else {
                 curScripId = -1;
+                inRoutine = false;
                 // needed to update the status part
                 buildList();
+                // update option menu here?
             }
         }
     }
