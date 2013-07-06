@@ -93,8 +93,9 @@ public class ScriptureActivity extends Activity {
         try {
             scripture = Scripture.objects(a).get(scripId);
         } catch (SQLiteException e) {
-            Log.e(SMApp.TAG, "well this sucks");
-            throw e;
+            Log.w(SMApp.TAG, "SQLiteException was caught. Syncing DB and trying again...");
+            SyncDB.syncDB(a);
+            scripture = Scripture.objects(a).get(scripId);
         }
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.

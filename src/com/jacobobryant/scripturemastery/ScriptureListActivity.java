@@ -227,9 +227,10 @@ public class ScriptureListActivity extends ListActivity {
                         public void onClick(DialogInterface dialog,
                                 int id) {
                             deletePassage();
-                            deleteScrip = null;
+                            //deleteScrip = null;
                         }
-                    })
+                    });
+                /*
                     .setNegativeButton(android.R.string.cancel,
                             new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog,
@@ -237,6 +238,7 @@ public class ScriptureListActivity extends ListActivity {
                             deleteScrip = null;
                         }
                     });
+                    */
                 break;
         }
         return builder.create();
@@ -247,6 +249,7 @@ public class ScriptureListActivity extends ListActivity {
         buildList();
         Toast.makeText(this, R.string.passage_deleted,
                 Toast.LENGTH_SHORT).show();
+        // reset routine here
     }
 
     private void buildList() {
