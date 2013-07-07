@@ -8,7 +8,11 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -21,6 +25,9 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.*;
 
 public class MainActivity extends ListActivity {
@@ -28,12 +35,18 @@ public class MainActivity extends ListActivity {
             "com.jacobobryant.scripturemastery.BOOK_ID";
     private static final int NEW_PASSAGE_REQUEST = 0;
     private final int DELETE_DIALOG = 0;
+    private final int ABOUT_DIALOG = 1;
     private Book deleteBook;
     
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
         Log.d(SMApp.TAG, "Entering SM Helper");
+        ChangeLog cl = new ChangeLog(this);
+        //cl.dontuseSetLastVersion("0.6");
+        if (cl.firstRun()) {
+            cl.getLogDialog().show();
+        }
         SyncDB.syncDB(getApplication());
         buildList();
         registerForContextMenu(getListView());
@@ -60,6 +73,7 @@ public class MainActivity extends ListActivity {
         return true;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
@@ -71,6 +85,9 @@ public class MainActivity extends ListActivity {
             case R.id.mnu_settings:
                 intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
+                return true;
+            case R.id.mnu_about:
+                showDialog(ABOUT_DIALOG);
                 return true;
             case R.id.mnu_crash:
                 return (1 / 0 == 0);
@@ -148,8 +165,43 @@ public class MainActivity extends ListActivity {
                         }
                     });
                 break;
+            case ABOUT_DIALOG:
+                builder.setTitle(R.string.title_activity_main)
+                    .setMessage(getAboutText())
+                    .setPositiveButton(android.R.string.ok, null);
+                break;
         }
         return builder.create();
+    }
+
+    private Spannable getAboutText() {
+        String version;
+        BufferedReader reader;
+        String line;
+        StringBuilder text = new StringBuilder();
+        Spannable content;
+
+        try {
+            version = getPackageManager()
+                .getPackageInfo(getPackageName(), 0).versionName;
+        } catch (NameNotFoundException e) {
+            return null;
+        }
+        reader = new BufferedReader(new InputStreamReader(
+            getApplication().getResources()
+            .openRawResource(R.raw.about)));
+        try {
+            while ((line = reader.readLine()) != null) {
+                text.append(line);
+            }
+            reader.close();
+        } catch (IOException ioe) {
+            Log.e(SMApp.TAG, "Couldn't read about text");
+        }
+        content = (Spannable) Html.fromHtml(String.format(text.toString(), version));
+        Linkify.addLinks(content,
+                Linkify.EMAIL_ADDRESSES|Linkify.WEB_URLS);
+        return content;
     }
 
     private void deleteGroup() {

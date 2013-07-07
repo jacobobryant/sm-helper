@@ -166,6 +166,7 @@ public class Book extends Model {
 
     @Override
     public boolean save(Context app) {
+        loadRoutine();
         if (lstRoutine.size() == 0) {
             routine.set(null);
         } else {

@@ -30,6 +30,8 @@ public class SMApp extends Application {
                 PreferenceManager.getDefaultSharedPreferences(this);
         boolean reporting =
             prefs.getBoolean(SettingsActivity.REPORTING, true);
-        if (reporting) ACRA.init(this);
+        if (reporting && ! BuildConfig.DEBUG) {
+            ACRA.init(this);
+        }
     }
 }

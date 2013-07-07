@@ -7,9 +7,6 @@ FC when loading ScriptureActivity
 FEATURES
 ========
 add help messages on first run
-about page
-    version number, about me, license
-
 better crash handling
     ask if contact is ok, add info about the database
 add more settings
@@ -20,6 +17,7 @@ Validate current db
     change old scriptures to separate groups
 overhaul model
 
-FIXED/COMPLETED
-===============
+COMPLETED
+=========
 deleted scriptures aren't removed from the current routine
+about page
