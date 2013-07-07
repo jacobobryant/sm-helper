@@ -9,4 +9,7 @@
     <item
         android:id="@+id/mnuRoutine"
         android:title="@string/mnuRoutine" />
+    <item
+        android:id="@+id/mnu_settings"
+        android:title="@string/mnu_settings" />
 </menu>

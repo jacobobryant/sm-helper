@@ -304,7 +304,7 @@ public class DBHandler extends SQLiteOpenHelper {
             }
             reader.close();
         } catch (IOException ioe) {
-            Log.e(MainActivity.TAG, "Couldn't read book data from file");
+            Log.e(SMApp.TAG, "Couldn't read book data from file");
         }
         return new OldBook(title, scriptures);
     }

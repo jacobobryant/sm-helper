@@ -6,6 +6,10 @@ import org.acra.ReportingInteractionMode;
 
 import android.app.Application;
 
+import android.content.SharedPreferences;
+
+import android.preference.PreferenceManager;
+
 @ReportsCrashes(
     formKey="",
     mailTo = "tooke@gmx.com",
@@ -16,11 +20,18 @@ import android.app.Application;
     resDialogCommentPrompt = R.string.crash_dialog_comment_prompt,
     resDialogOkToast = R.string.crash_dialog_ok_toast
     )
-public class SMHelperApp extends Application {
+public class SMApp extends Application {
+    public static final String TAG = "scripturemastery";
 
     @Override
     public void onCreate() {
         super.onCreate();
-        if (!BuildConfig.DEBUG) ACRA.init(this);
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        boolean reporting =
+            prefs.getBoolean(SettingsActivity.REPORTING, true);
+        if (reporting && ! BuildConfig.DEBUG) {
+            ACRA.init(this);
+        }
     }
 }

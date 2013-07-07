@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/mnu_crash"
+        android:title="@string/mnu_crash"
+        android:visible="false" />
+    <item
         android:id="@+id/mnuNewPassage"
         android:title="@string/mnuNewPassage" />
+    <item
+        android:id="@+id/mnu_about"
+        android:title="@string/mnu_about" />
     <item
         android:id="@+id/mnu_settings"
         android:title="@string/mnu_settings" />

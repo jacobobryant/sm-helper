@@ -1,14 +1,14 @@
 package com.jacobobryant.scripturemastery;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
-import android.os.Bundle;
 
+import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NewPassageActivity extends Activity {
     private List<Integer> bookIds;
@@ -39,6 +39,7 @@ public class NewPassageActivity extends Activity {
         List<String> titles = new ArrayList<String>();
         bookIds = new ArrayList<Integer>();
 
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         for (Book book : Book.objects(getApplication()).all()) {
             if (!book.getPreloaded()) {
                 bookIds.add(book.getId());
@@ -60,6 +61,19 @@ public class NewPassageActivity extends Activity {
             txtNewGroup.setVisibility(View.VISIBLE);
         }
     }
+
+    /*
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+    */
 
     public void btnSaveClick(View v) {
         final Spinner spnGroup = (Spinner) findViewById(R.id.spnGroup);

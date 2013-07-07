@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import android.app.Activity;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -43,10 +44,11 @@ public class KeywordActivity extends Activity
         String selectedRef;
         Intent intent = getIntent();
         int scripId = intent.getIntExtra(
-                MainActivity.EXTRA_SCRIP_ID, -1);
+                ScriptureListActivity.EXTRA_SCRIP_ID, -1);
         Scripture scrip = Scripture.objects(getApplication())
                 .get(scripId);
 
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mode = (new Random().nextInt(2) == 0) ?
                 Mode.GUESS_REFERENCE : Mode.GUESS_KEYWORD;
         radioGroup = (RadioGroup) findViewById(R.id.radio_group);
@@ -96,6 +98,19 @@ public class KeywordActivity extends Activity
         }
         super.onSaveInstanceState(state);
     }
+
+    /*
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+    */
 
     public List<String> getChoices(Scripture scrip) {
         final int NUMCHOICES = 6;

@@ -1,15 +1,26 @@
 package com.jacobobryant.scripturemastery;
 
-import android.app.*;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+
+import android.database.sqlite.SQLiteException;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.SystemClock;
 
-import android.view.*;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 public class ScriptureActivity extends Activity {
@@ -24,6 +35,7 @@ public class ScriptureActivity extends Activity {
     private String routine;
     private Passage passage;
     int progress;
+    int scripId;
 
     public class TouchListener implements OnTouchListener {
         public boolean onTouch(View v, MotionEvent event) {
@@ -60,6 +72,7 @@ public class ScriptureActivity extends Activity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        Log.d(SMApp.TAG, "ScriptureActivity.onCreate()");
         setContentView(R.layout.scripture_activity);
         LayoutInflater inflater = LayoutInflater.from(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.layout);
@@ -68,26 +81,31 @@ public class ScriptureActivity extends Activity {
         Paint defaultPaint = ((TextView)
                 inflater.inflate(R.layout.verse, null)).getPaint();
         View scrollView = findViewById(R.id.scroll);
-        Bundle passageBundle;
-        int scripId;
         Intent intent = getIntent();
         Context a = getApplication();
         boolean inRoutine;
 
-        inRoutine = intent.getBooleanExtra(MainActivity.EXTRA_IN_ROUTINE, false);
-        scripId = intent.getIntExtra(MainActivity.EXTRA_SCRIP_ID, -1);
-        scripture = Scripture.objects(a).get(scripId);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        inRoutine = intent.getBooleanExtra(
+                ScriptureListActivity.EXTRA_IN_ROUTINE, false);
+        scripId = intent.getIntExtra(
+                ScriptureListActivity.EXTRA_SCRIP_ID, -1);
+        try {
+            scripture = Scripture.objects(a).get(scripId);
+        } catch (SQLiteException e) {
+            Log.w(SMApp.TAG, "SQLiteException was caught. Syncing DB and trying again...");
+            SyncDB.syncDB(a);
+            scripture = Scripture.objects(a).get(scripId);
+        }
         // there appears to be a bug in the Bundle.get*() methods. They
         // shouldn't throw NullPointerExceptions, but they do.
         try {
-            passageBundle = state.getBundle(PASSAGE_BUNDLE);
+            Bundle passageBundle = state.getBundle(PASSAGE_BUNDLE);
+            passage = new Passage(scripture, defaultPaint,
+                    passageBundle);
         } catch (NullPointerException e) {
-            passageBundle = null;
+            passage = new Passage(scripture, defaultPaint);
         }
-
-        passage = (passageBundle == null) ?
-                new Passage(scripture, defaultPaint) :
-                new Passage(scripture, defaultPaint, passageBundle);
         if (inRoutine) {
             routine = scripture.getBook(a).getRoutine(a);
         }
@@ -101,6 +119,12 @@ public class ScriptureActivity extends Activity {
         scrollView.setOnTouchListener(new TouchListener());
         setText();
         progress = RESULT_MEMORIZED;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(SMApp.TAG, "ScriptureActivity.onResume()");
     }
 
     @Override
@@ -119,7 +143,7 @@ public class ScriptureActivity extends Activity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        if (! passage.hasMoreLevels()) {
+        if (!passage.hasMoreLevels()) {
             menu.findItem(R.id.mnuIncreaseLevel).setVisible(false);
         }
         if (routine == null) {
@@ -128,10 +152,16 @@ public class ScriptureActivity extends Activity {
         return true;
     }
 
+    // todo: get rid of deprecated showDialog calls.
     @SuppressWarnings("deprecation")
-	@Override
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            /*
+            case android.R.id.home:
+                finish();
+                return true;
+                */
             case R.id.mnuIncreaseLevel:
                 passage.increaseLevel();
                 setText();
@@ -141,6 +171,10 @@ public class ScriptureActivity extends Activity {
                 return true;
             case R.id.mnuRoutine:
                 showDialog(ROUTINE_DIALOG);
+                return true;
+            case R.id.mnu_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -1,0 +1,32 @@
+<!-- vim: ft=html :
+-->
+<html>
+  <head>
+    <style type='text/css'>
+      a            { color:#a0a0e0 }
+      div.title    { 
+          color:#C0F0C0; 
+          font-size:1.2em; 
+          font-weight:bold; 
+          margin-top:1em; 
+          margin-bottom:0.5em; 
+          text-align:center }
+      div.subtitle { 
+          color:#C0F0C0; 
+          font-size:0.8em; 
+          margin-bottom:1em; 
+          text-align:center }
+      div.freetext { color:#F0F0F0 }
+      div.list     { color:#C0C0F0 }
+    </style>
+  </head>
+  <body>
+$ 0.6.1
+% Version 0.6.1 (6 Jul 2013)
+* Improved UI
+* Bug fixes
+* Started using <a href="http://code.google.com/p/android-change-log/">Android Change Log</a>
+* Coming soon: new scripture masteries for Book of Mormon &amp; Old Testament
+! <a href="http://jacobobryant.com/contact.php">Feedback appreciated!</a> I'm leaving at the end of this month on my mission, so I only have a few more weeks to work on this app. Feel free to send any feature requests and especially bug reports.
+</body>
+</html>

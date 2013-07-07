@@ -4,7 +4,7 @@ import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.ForeignKeyField;
 import com.orm.androrm.field.IntegerField;
-
+import com.orm.androrm.Filter;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
@@ -40,6 +40,12 @@ public class Scripture extends Model {
         return objects(context, Scripture.class);
     }
 
+    public static Scripture object(Context context, int bookId,
+            int index) {
+        return objects(context, Scripture.class).filter(new Filter()
+            .is("book__mId", bookId)).limit(index, 1).toList().get(0);
+    }
+
     public Scripture(String reference, String keywords,
             String verses, int status, int finishedStreak) {
         this();
@@ -54,7 +60,7 @@ public class Scripture extends Model {
         this(reference, keywords, verses, NOT_STARTED, 0);
     }
 
-	public String getReference() {
+    public String getReference() {
         return reference.get();
     }
 
@@ -62,13 +68,13 @@ public class Scripture extends Model {
         return new String(verses.get());
     }
 
-	public int getStatus() {
-		return status.get();
-	}
+    public int getStatus() {
+        return status.get();
+    }
 
-	public int getFinishedStreak() {
-		return finishedStreak.get();
-	}
+    public int getFinishedStreak() {
+        return finishedStreak.get();
+    }
 
     public void setProgress(int progress) {
         switch (progress) {
@@ -80,20 +86,29 @@ public class Scripture extends Model {
                 break;
             case MEMORIZED:
                 finishedStreak.set(finishedStreak.get() + 1);
+                status.set((finishedStreak.get() > NUM_LEVELS)
+                        ? FINISHED : IN_PROGRESS);
+                /*
                 if (finishedStreak.get() > NUM_LEVELS ) {
                     status.set(FINISHED);
                 } else {
                     status.set(IN_PROGRESS);
                 }
+                */
                 break;
             case PARTIALLY_MEMORIZED:
                 // decrement the starting level
-                if (finishedStreak.get() > 0) {
+                int streak = finishedStreak.get();
+                if (streak > 0) {
+                    finishedStreak.set((streak > NUM_LEVELS)
+                            ? NUM_LEVELS - 1 : streak - 1);
+                    /*
                     if (finishedStreak.get() > NUM_LEVELS) {
                         finishedStreak.set(NUM_LEVELS - 1);
                     } else {
                         finishedStreak.set(finishedStreak.get() - 1);
                     }
+                    */
                 }
                 status.set(IN_PROGRESS);
                 break;
@@ -137,10 +152,19 @@ public class Scripture extends Model {
         return keywords.get();
     }
 
-	@Override
-	public String toString() {
-		return "Scripture [reference=" + reference + ", keywords=" + keywords
-				+ ", verses=" + verses + ", status=" + status
-				+ ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
-	}
+    @Override
+    public String toString() {
+        return "Scripture [reference=" + reference + ", keywords=" + keywords
+                + ", verses=" + verses + ", status=" + status
+                + ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
+    }
+
+    @Override
+    public boolean delete(Context app) {
+        Book book = this.book.get(app);
+        if (book != null) {
+            book.removeFromRoutine(getId(), app);
+        }
+        return super.delete(app);
+    }
 }

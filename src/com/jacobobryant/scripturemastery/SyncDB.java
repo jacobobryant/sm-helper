@@ -35,12 +35,12 @@ public class SyncDB {
 
     public static void syncDB(Context app) {
         final String DB_NAME = "sm.db";
-    	List<Class<? extends Model>> models =
+        List<Class<? extends Model>> models =
                 new ArrayList<Class<? extends Model>>();
 
-    	models.add(Book.class);
-    	models.add(Scripture.class);
-    	DatabaseAdapter.setDatabaseName(DB_NAME);
+        models.add(Book.class);
+        models.add(Scripture.class);
+        DatabaseAdapter.setDatabaseName(DB_NAME);
         DatabaseAdapter.getInstance(app)
                 .setModels(models);
         if (Book.objects(app).count() == 0) {
@@ -48,7 +48,7 @@ public class SyncDB {
                 //try {
                     upgradeDB(app);
                 /*} catch (SQLiteException e) {
-                    Log.e(MainActivity.TAG,
+                    Log.e(SMApp.TAG,
                         "Couldn't upgrade old database", e);
                     populate(app);
                 }*/
@@ -77,8 +77,7 @@ public class SyncDB {
                 book.addScripture(scrip);
                 scrip.save(app);
             }
-            book.setRoutine(bookRecord);
-            book.save(app);
+            book.setRoutine(bookRecord, app);
         }
         adapter.commitTransaction();
         app.deleteDatabase(DBHandler.DB_NAME);
@@ -166,7 +165,7 @@ public class SyncDB {
                 }
                 reader.close();
             } catch (IOException ioe) {
-                Log.e(MainActivity.TAG, "Couldn't read book data " +
+                Log.e(SMApp.TAG, "Couldn't read book data " +
                     "from file (id = " + id + ")");
             }
             book.save(app);

@@ -1,11 +1,9 @@
 <resources>
 <string name="app_name">SM Helper</string>
 <string name="title_activity_main">Scripture Mastery Helper</string>
-<string name="mnuIncreaseLevel">Increase Level</string>
-<string name="mnuDecreaseLevel">Decrease Level</string>
-<string name="mnuAddPassage">Add</string>
-<string name="mnuStartRoutine">Start New Routine</string>
-<string name="mnuContinueRoutine">Continue Routine</string>
+<string name="mnuIncreaseLevel">Next Level</string>
+<string name="mnuStartRoutine">New Routine</string>
+<string name="mnuContinueRoutine">Continue</string>
 <string name="mnuRoutine">View Routine</string>
 <string name="mnuNewPassage">Add Passage</string>
 <string name="txtPassageHint">Passage text</string>
@@ -19,8 +17,8 @@
 <string name="noPassageError">You must include text to be memorized.</string>
 <string name="passageAdded">Passage added successfully.</string>
 <string name="delete">Delete</string>
-<string name="passageDeleted">Passage deleted successfully.</string>
-<string name="groupDeleted">Group deleted successfully.</string>
+<string name="passage_deleted">Passage deleted successfully.</string>
+<string name="group_deleted">Group deleted successfully.</string>
 <string name="newPassageLabel">Add New Passage</string>
 <string name="mnuDone">Done</string>
 <string name="progressDialog">How well do you know this passage now?</string>
@@ -46,4 +44,16 @@
     application to stop. Please help us fix this by emailing us the error data.</string>
 <string name="crash_dialog_comment_prompt">Additional comments (optional):</string>
 <string name="crash_dialog_ok_toast">Thank you!</string>
+<string name="pref_reporting">Crash Reporting</string>
+<string name="pref_reporting_summ">Enable reports by email (restart required).</string>
+<string name="mnu_crash">Crash</string>
+<string name="dialog_delete">Really delete?</string>
+<string name="changelog_full_title">Change Log</string>
+<string name="changelog_title">What\'s New</string>
+<string name="changelog_ok_button">OK</string>
+<string name="changelog_show_full">more...</string>
+<string name="about">Version %s<br />Jacob OBryant</string>
+<string name="mnu_about">About</string>
+
+
 </resources>

@@ -1,20 +1,19 @@
 package com.jacobobryant.scripturemastery;
 
+import com.orm.androrm.field.BlobField;
+import com.orm.androrm.field.BooleanField;
+import com.orm.androrm.field.CharField;
+import com.orm.androrm.field.OneToManyField;
+import com.orm.androrm.Model;
+import com.orm.androrm.QuerySet;
+
+import android.content.Context;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-
-import com.orm.androrm.field.BlobField;
-import com.orm.androrm.field.BooleanField;
-import com.orm.androrm.field.CharField;
-import com.orm.androrm.field.OneToManyField;
-
-import com.orm.androrm.Model;
-import com.orm.androrm.QuerySet;
-
-import android.content.Context;
 
 public class Book extends Model {
     protected CharField title;
@@ -23,20 +22,28 @@ public class Book extends Model {
     protected BooleanField preloaded;
     private LinkedList<Integer> lstRoutine;
 
-	public static final QuerySet<Book> objects(Context context) {
-		return objects(context, Book.class);
-	}
+    public static final QuerySet<Book> objects(Context context) {
+        return objects(context, Book.class);
+    }
 
-	public Book() {
-		super();
-		title = new CharField();
+    public static Book object(Context context, int index) {
+        return objects(context, Book.class).all().limit(index, 1)
+            .toList().get(0);
+    }
+
+    public Book() {
+        super();
+        title = new CharField();
         preloaded = new BooleanField();
         routine = new BlobField();
-		scriptures = new OneToManyField<Book, Scripture>(
+        scriptures = new OneToManyField<Book, Scripture>(
                 Book.class, Scripture.class);
-	}
+    }
 
     private void loadRoutine() {
+        if (lstRoutine != null) {
+            return;
+        }
         lstRoutine = new LinkedList<Integer>();
         if (routine.get() != null) {
             ByteBuffer buf = ByteBuffer.wrap(routine.get());
@@ -46,26 +53,27 @@ public class Book extends Model {
         }
     }
 
-	public String getTitle() {
-		return title.get();
-	}
+    public String getTitle() {
+        return title.get();
+    }
 
     public void setTitle(String title) {
         this.title.set(title);
     }
-	
-	public QuerySet<Scripture> getScriptures(Context context) {
-		return scriptures.get(context, this);
-	}
+    
+    public QuerySet<Scripture> getScriptures(Context context) {
+        return scriptures.get(context, this);
+    }
 
-	public Scripture getScripture(Context context, int index) {
-		return scriptures.get(context, this).all().toList().get(index);
-	}
+    public Scripture getScripture(Context context, int index) {
+        return scriptures.get(context, this).all().limit(index, 1)
+            .toList().get(0);
+    }
 
     public void addScripture(Scripture scrip) {
         scriptures.add(scrip);
     }
-	
+    
     public boolean getPreloaded() {
         return preloaded.get();
     }
@@ -78,8 +86,9 @@ public class Book extends Model {
         if (scriptures.get(context, this).isEmpty()) {
             throw new UnsupportedOperationException("this book is empty");
         }
-        return (scriptures.get(context, this).all().limit(1).toList()
-                .get(0).getKeywords().length() != 0);
+        String keywords = scriptures.get(context, this).all().limit(1)
+            .toList().get(0).getKeywords();
+        return (keywords != null && keywords.length() != 0);
     }
 
     public void createRoutine(Context context) {
@@ -116,12 +125,12 @@ public class Book extends Model {
             index = rand.nextInt(finished.size());
             lstRoutine.add(finished.remove(index));
         }
-        saveRoutine();
+        save(context);
     }
 
     public String getRoutine(Context context) {
         StringBuilder sb = new StringBuilder();
-        if (lstRoutine == null) loadRoutine();
+        loadRoutine();
         if (lstRoutine.size() == 0) {
             return null;
         }
@@ -135,7 +144,29 @@ public class Book extends Model {
         return sb.toString();
     }
 
-    private void saveRoutine() {
+    public String getDebugRoutine() {
+        StringBuilder sb = new StringBuilder();
+        loadRoutine();
+        if (lstRoutine.size() == 0) {
+            return "empty";
+        }
+        for (int index : lstRoutine) {
+            sb.append(index);
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
+
+    public void removeFromRoutine(Integer scripId, Context app) {
+        loadRoutine();
+        if (lstRoutine.remove(scripId)) {
+            save(app);
+        }
+    }
+
+    @Override
+    public boolean save(Context app) {
+        loadRoutine();
         if (lstRoutine.size() == 0) {
             routine.set(null);
         } else {
@@ -145,33 +176,34 @@ public class Book extends Model {
             }
             routine.set(buf.array());
         }
+        return super.save(app);
     }
 
     public int getRoutineLength() {
-        if (lstRoutine == null) loadRoutine();
+        loadRoutine();
         return lstRoutine.size();
     }
 
     public Scripture current(Context context) {
-        if (lstRoutine == null) loadRoutine();
+        loadRoutine();
         return scriptures.get(context, this).get(lstRoutine.element());
     }
 
-    public void moveToNext() {
-        if (lstRoutine == null) loadRoutine();
+    public void moveToNext(Context app) {
+        loadRoutine();
         lstRoutine.remove();
-        saveRoutine();
+        save(app);
     }
 
     // This is only needed for upgrading from a pre-androrm database.
-    public void setRoutine(SyncDB.BookRecord book) {
+    public void setRoutine(SyncDB.BookRecord book, Context app) {
         if (book.routine != null && book.routine.length() != 0) {
             lstRoutine = new LinkedList<Integer>();
             for (String index : book.routine.split(",")) {
                 lstRoutine.add(book.scriptures
                         .get(Integer.parseInt(index)).id);
             }
-            saveRoutine();
+            save(app);
         }
     }
 }

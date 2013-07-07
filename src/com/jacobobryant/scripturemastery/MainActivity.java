@@ -1,86 +1,79 @@
 package com.jacobobryant.scripturemastery;
 
-import android.app.ExpandableListActivity;
+import com.orm.androrm.DatabaseAdapter;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ListActivity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-
+import android.text.Html;
+import android.text.Spannable;
+import android.text.util.Linkify;
 import android.util.Log;
-
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ExpandableListView;
-import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
-import android.widget.SimpleExpandableListAdapter;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.*;
 
-public class MainActivity extends ExpandableListActivity {
-    public static final String TAG = "scripturemastery";
+public class MainActivity extends ListActivity {
     public static final String EXTRA_BOOK_ID =
             "com.jacobobryant.scripturemastery.BOOK_ID";
-    public static final String EXTRA_SCRIP_ID =
-            "com.jacobobryant.scripturemastery.SCRIP_ID";
-    public static final String EXTRA_IN_ROUTINE =
-            "com.jacobobryant.scripturemastery.IN_ROUTINE";
-    private static final String ROUTINE_REF = "in_routine";
-    private static final int LEARN_SCRIPTURE_REQUEST = 0;
-    private static final int NEW_PASSAGE_REQUEST = 1;
-    private static final int LEARN_KEYWORD_REQUEST = 2;
-    private Scripture curScripture;
-    private boolean inRoutine;
+    private static final int NEW_PASSAGE_REQUEST = 0;
+    private final int DELETE_DIALOG = 0;
+    private final int ABOUT_DIALOG = 1;
+    private Book deleteBook;
     
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        int scripId;
-
-        Log.d(TAG, "Entering SM Helper");
+        Log.d(SMApp.TAG, "Entering SM Helper");
+        ChangeLog cl = new ChangeLog(this);
+        //cl.dontuseSetLastVersion("0.6");
+        if (cl.firstRun()) {
+            cl.getLogDialog().show();
+        }
         SyncDB.syncDB(getApplication());
-        buildExpandableList();
-        try {
-            scripId = state.getInt(EXTRA_SCRIP_ID);
-            curScripture = Scripture.objects(getApplication())
-                    .get(scripId);
-        } catch (NullPointerException e) {
-            curScripture = null;
-        }
-        try {
-            inRoutine = state.getBoolean(ROUTINE_REF);
-        } catch (NullPointerException e) {
-            inRoutine = false;
-        }
-        registerForContextMenu(getExpandableListView());
+        buildList();
+        registerForContextMenu(getListView());
     }
 
     @Override
-    public boolean onChildClick(ExpandableListView parent, View v,
-            int groupPosition, int childPosition, long id) {
-        Book book = Book.objects(getApplication()).all()
-                .toList().get(groupPosition);
-        Intent intent = new Intent(this, ScriptureActivity.class);
+    public void onListItemClick(ListView parent, View v,
+            int position, long id) {
+        int bookId = Book.object(getApplication(), position).getId();
+        Intent intent = new Intent(this, ScriptureListActivity.class);
 
-        curScripture = book.getScriptures(getApplication())
-                .toList().get(childPosition);
-        intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
-        startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
-        return true;
+        intent.putExtra(EXTRA_BOOK_ID, bookId);
+        startActivity(intent);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_activity_options, menu);
+        if (BuildConfig.DEBUG) {
+            MenuItem mnuCrash = menu.findItem(R.id.mnu_crash);
+            mnuCrash.setVisible(true);
+        }
         return true;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
@@ -93,8 +86,26 @@ public class MainActivity extends ExpandableListActivity {
                 intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.mnu_about:
+                showDialog(ABOUT_DIALOG);
+                return true;
+            case R.id.mnu_crash:
+                return (1 / 0 == 0);
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    // todo: refactor so that buildList doesn't have to be called.
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        if (requestCode == NEW_PASSAGE_REQUEST &&
+                resultCode == RESULT_OK) {
+            buildList();
+            Toast.makeText(this, getString(R.string.passageAdded),
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -102,68 +113,29 @@ public class MainActivity extends ExpandableListActivity {
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        ExpandableListView.ExpandableListContextMenuInfo info =
-                (ExpandableListView.ExpandableListContextMenuInfo)
-                menuInfo;
+        AdapterView.AdapterContextMenuInfo info =
+            (AdapterView.AdapterContextMenuInfo) menuInfo;
         MenuInflater inflater = getMenuInflater();
-        int type = ExpandableListView
-                .getPackedPositionType(info.packedPosition);
-        int groupPos = ExpandableListView
-                .getPackedPositionGroup(info.packedPosition);
-        int childPos = ExpandableListView
-                .getPackedPositionChild(info.packedPosition);
-        Book book = Book.objects(getApplication()).all()
-            .toList().get(groupPos);
+        Book book = Book.object(getApplication(), info.position);
 
-        if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
-            inflater.inflate(R.menu.book_menu, menu);
+        if (!book.getPreloaded()) {
+            inflater.inflate(R.menu.delete_menu, menu);
             menu.setHeaderTitle(book.getTitle());
-            if (book.getRoutineLength() != 0) {
-                menu.findItem(R.id.mnuContinueRoutine).setVisible(true);
-            }
-            if (!book.getPreloaded()) {
-                menu.findItem(R.id.mnuDeleteGroup).setVisible(true);
-            }
-        } else {
-            if (!book.getPreloaded()) {
-                inflater.inflate(R.menu.passage_menu, menu);
-                menu.setHeaderTitle(book.getScripture(
-                        getApplication(), childPos)
-                        .getReference());
-            }
         }
     }
 
+    // the support library doesn't have a FragmentListActivity, so we have
+    // to use the deprecated showDialog method
+    @SuppressWarnings("deprecation")
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        ExpandableListContextMenuInfo info =
-                (ExpandableListContextMenuInfo) item.getMenuInfo();
-        int groupPos = ExpandableListView
-                .getPackedPositionGroup(info.packedPosition);
-        int childPos = ExpandableListView
-                .getPackedPositionChild(info.packedPosition);
-        Book book = Book.objects(getApplicationContext()).all().toList()
-                .get(groupPos);
+        AdapterView.AdapterContextMenuInfo info =
+            (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        deleteBook = Book.object(getApplication(), info.position);
 
         switch (item.getItemId()) {
-            case R.id.mnuStartRoutine:
-                book.createRoutine(getApplication());
-                book.save(getApplication());
-            case R.id.mnuContinueRoutine:
-                inRoutine = true;
-                curScripture = book.current(getApplication());
-                startScripture();
-                return true;
-            case R.id.mnuDeleteGroup:
-                book.delete(getApplicationContext());
-                buildExpandableList();
-                toast(R.string.groupDeleted, true);
-                return true;
-            case R.id.mnuDeletePassage:
-                book.getScripture(getApplicationContext(), childPos)
-                        .delete(getApplicationContext());
-                buildExpandableList();
-                toast(R.string.passageDeleted, true);
+            case R.id.mnuDelete:
+                showDialog(DELETE_DIALOG);
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -171,159 +143,97 @@ public class MainActivity extends ExpandableListActivity {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode,
-                                 Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        switch (requestCode) {
-            case LEARN_KEYWORD_REQUEST:
-                if (resultCode == RESULT_OK) {
-                    Intent scriptureIntent =
-                            new Intent(this, ScriptureActivity.class);
-                    scriptureIntent.putExtra(EXTRA_SCRIP_ID,
-                            curScripture.getId());
-                    scriptureIntent.putExtra(EXTRA_IN_ROUTINE, true);
-                    startActivityForResult(scriptureIntent,
-                            LEARN_SCRIPTURE_REQUEST);
-                }
+    protected Dialog onCreateDialog(int id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        switch (id) {
+            case DELETE_DIALOG:
+                builder.setMessage(String.format(getString(
+                        R.string.dialog_delete), deleteBook.getTitle()))
+                    .setPositiveButton(R.string.delete,
+                            new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                int id) {
+                            deleteGroup();
+                            deleteBook = null;
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                int id) {
+                            deleteBook = null;
+                        }
+                    });
                 break;
-            case LEARN_SCRIPTURE_REQUEST:
-                switch (resultCode) {
-                    case ScriptureActivity.RESULT_MASTERED:
-                        curScripture.setProgress(Scripture.MASTERED);
-                        commit();
-                        break;
-                    case ScriptureActivity.RESULT_MEMORIZED:
-                        curScripture.setProgress(Scripture.MEMORIZED);
-                        commit();
-                        break;
-                    case ScriptureActivity.RESULT_PARTIALLY_MEMORIZED:
-                        curScripture.setProgress(
-                                Scripture.PARTIALLY_MEMORIZED);
-                        commit();
-                        break;
-                    default:
-                        inRoutine = false;
-                        curScripture = null;
-                }
+            case ABOUT_DIALOG:
+                builder.setTitle(R.string.title_activity_main)
+                    .setMessage(getAboutText())
+                    .setPositiveButton(android.R.string.ok, null);
                 break;
-            case NEW_PASSAGE_REQUEST:
-                switch (resultCode) {
-                    case RESULT_OK:
-                        buildExpandableList();
-                        toast(R.string.passageAdded, true);
-                }
         }
+        return builder.create();
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle state) {
-        if (curScripture != null) {
-            state.putInt(EXTRA_SCRIP_ID, curScripture.getId());
+    private Spannable getAboutText() {
+        String version;
+        BufferedReader reader;
+        String line;
+        StringBuilder text = new StringBuilder();
+        Spannable content;
+
+        try {
+            version = getPackageManager()
+                .getPackageInfo(getPackageName(), 0).versionName;
+        } catch (NameNotFoundException e) {
+            return null;
         }
-        state.putBoolean(ROUTINE_REF, inRoutine);
-        super.onSaveInstanceState(state);
+        reader = new BufferedReader(new InputStreamReader(
+            getApplication().getResources()
+            .openRawResource(R.raw.about)));
+        try {
+            while ((line = reader.readLine()) != null) {
+                text.append(line);
+            }
+            reader.close();
+        } catch (IOException ioe) {
+            Log.e(SMApp.TAG, "Couldn't read about text");
+        }
+        content = (Spannable) Html.fromHtml(String.format(text.toString(), version));
+        Linkify.addLinks(content,
+                Linkify.EMAIL_ADDRESSES|Linkify.WEB_URLS);
+        return content;
     }
 
-    private void buildExpandableList() {
+    private void deleteGroup() {
+        Context app = getApplication();
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        adapter.beginTransaction();
+        for (Scripture scrip : deleteBook.getScriptures(app).all()) {
+            scrip.delete(app);
+        }
+        deleteBook.delete(app);
+        adapter.commitTransaction();
+        buildList();
+        Toast.makeText(this, R.string.group_deleted,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private void buildList() {
         final String NAME = "NAME";
-        final String STATUS = "STATUS";
         List<Map<String, String>> bookData =
                 new ArrayList<Map<String, String>>();
-        List<List<Map<String, String>>> referenceData =
-                new ArrayList<List<Map<String, String>>>();
-        List<Map<String, String>> childReferenceData;
         Map<String, String> map;
 
         for (Book book : Book.objects(getApplication()).all()) {
             map = new HashMap<String, String>();
             map.put(NAME, book.getTitle());
             bookData.add(map);
-            childReferenceData = new ArrayList<Map<String, String>>();
-            for (Scripture scripture : book.getScriptures(
-                    getApplication()).all()) {
-                map = new HashMap<String, String>();
-                map.put(NAME, scripture.getReference());
-                map.put(STATUS, getStatusString(scripture.getStatus()));
-                childReferenceData.add(map);
-            }
-            referenceData.add(childReferenceData);
         }
-        setListAdapter(new SimpleExpandableListAdapter(
+        setListAdapter(new SimpleAdapter(
                 this,
                 bookData,
-                android.R.layout.simple_expandable_list_item_1,
+                android.R.layout.simple_list_item_1,
                 new String[] {NAME},
-                new int[] {android.R.id.text1},
-                referenceData,
-                R.layout.scripture_list_item,
-                new String[] {NAME, STATUS},
-                new int[] {R.id.txtReference, R.id.txtStatus}));
-    }
-
-    private String getStatusString(int status) {
-        switch (status) {
-            case Scripture.NOT_STARTED:
-                return "";
-            case Scripture.IN_PROGRESS:
-                return "in progress";
-            case Scripture.FINISHED:
-                return "finished";
-            default:
-                throw new IllegalArgumentException();
-        }
-    }
-
-    private void commit() {
-        Book book;
-        Context a = getApplication();
-
-        curScripture.save(a);
-        if (inRoutine) {
-            book = curScripture.getBook(a);
-            book.moveToNext();
-            book.save(a);
-            if (book.getRoutineLength() > 0) {
-                curScripture = book.current(a);
-                startScripture();
-            } else {
-                buildExpandableList();
-            }
-        } else {
-            curScripture = null;
-            buildExpandableList();
-        }
-    }
-
-    private void startScripture() {
-        Intent intent = new Intent();
-        int count = 0;
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(this);
-        boolean practiceKeywords =
-                prefs.getBoolean(SettingsActivity.KEYWORDS, true);
-        Book book = curScripture.getBook(getApplication());
-
-        intent.putExtra(EXTRA_SCRIP_ID, curScripture.getId());
-        intent.putExtra(EXTRA_IN_ROUTINE, true);
-        if (practiceKeywords && book.hasKeywords(getApplication())) {
-            for (Scripture scrip : book.getScriptures(
-                    getApplication()).all()) {
-                if (scrip.getStatus() != Scripture.NOT_STARTED &&
-                        ++count > 1) {
-                    intent.setClass(this, KeywordActivity.class);
-                    startActivityForResult(intent,
-                            LEARN_KEYWORD_REQUEST);
-                    return;
-                }
-            }
-        }
-        intent.setClass(this, ScriptureActivity.class);
-        startActivityForResult(intent, LEARN_SCRIPTURE_REQUEST);
-    }
-
-    private void toast(int id, boolean lengthShort) {
-        int length = (lengthShort) ? Toast.LENGTH_SHORT
-                : Toast.LENGTH_LONG;
-        Toast.makeText(this, getString(id), length).show();
+                new int[] {android.R.id.text1}));
     }
 }
