@@ -1,11 +1,5 @@
 package com.jacobobryant.scripturemastery;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
 import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.BooleanField;
 import com.orm.androrm.field.CharField;
@@ -14,6 +8,12 @@ import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
 import android.content.Context;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 public class Book extends Model {
     protected CharField title;
@@ -41,6 +41,9 @@ public class Book extends Model {
     }
 
     private void loadRoutine() {
+        if (lstRoutine != null) {
+            return;
+        }
         lstRoutine = new LinkedList<Integer>();
         if (routine.get() != null) {
             ByteBuffer buf = ByteBuffer.wrap(routine.get());
@@ -122,12 +125,12 @@ public class Book extends Model {
             index = rand.nextInt(finished.size());
             lstRoutine.add(finished.remove(index));
         }
-        saveRoutine();
+        save(context);
     }
 
     public String getRoutine(Context context) {
         StringBuilder sb = new StringBuilder();
-        if (lstRoutine == null) loadRoutine();
+        loadRoutine();
         if (lstRoutine.size() == 0) {
             return null;
         }
@@ -141,11 +144,9 @@ public class Book extends Model {
         return sb.toString();
     }
 
-    public String getDebugRoutine(Context context) {
+    public String getDebugRoutine() {
         StringBuilder sb = new StringBuilder();
-        if (lstRoutine == null) {
-            loadRoutine();
-        }
+        loadRoutine();
         if (lstRoutine.size() == 0) {
             return "empty";
         }
@@ -156,7 +157,15 @@ public class Book extends Model {
         return sb.toString();
     }
 
-    private void saveRoutine() {
+    public void removeFromRoutine(Integer scripId, Context app) {
+        loadRoutine();
+        if (lstRoutine.remove(scripId)) {
+            save(app);
+        }
+    }
+
+    @Override
+    public boolean save(Context app) {
         if (lstRoutine.size() == 0) {
             routine.set(null);
         } else {
@@ -166,33 +175,34 @@ public class Book extends Model {
             }
             routine.set(buf.array());
         }
+        return super.save(app);
     }
 
     public int getRoutineLength() {
-        if (lstRoutine == null) loadRoutine();
+        loadRoutine();
         return lstRoutine.size();
     }
 
     public Scripture current(Context context) {
-        if (lstRoutine == null) loadRoutine();
+        loadRoutine();
         return scriptures.get(context, this).get(lstRoutine.element());
     }
 
-    public void moveToNext() {
-        if (lstRoutine == null) loadRoutine();
+    public void moveToNext(Context app) {
+        loadRoutine();
         lstRoutine.remove();
-        saveRoutine();
+        save(app);
     }
 
     // This is only needed for upgrading from a pre-androrm database.
-    public void setRoutine(SyncDB.BookRecord book) {
+    public void setRoutine(SyncDB.BookRecord book, Context app) {
         if (book.routine != null && book.routine.length() != 0) {
             lstRoutine = new LinkedList<Integer>();
             for (String index : book.routine.split(",")) {
                 lstRoutine.add(book.scriptures
                         .get(Integer.parseInt(index)).id);
             }
-            saveRoutine();
+            save(app);
         }
     }
 }

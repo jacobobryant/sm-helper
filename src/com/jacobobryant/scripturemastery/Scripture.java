@@ -4,7 +4,6 @@ import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.ForeignKeyField;
 import com.orm.androrm.field.IntegerField;
-
 import com.orm.androrm.Filter;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
@@ -87,20 +86,29 @@ public class Scripture extends Model {
                 break;
             case MEMORIZED:
                 finishedStreak.set(finishedStreak.get() + 1);
+                status.set((finishedStreak.get() > NUM_LEVELS)
+                        ? FINISHED : IN_PROGRESS);
+                /*
                 if (finishedStreak.get() > NUM_LEVELS ) {
                     status.set(FINISHED);
                 } else {
                     status.set(IN_PROGRESS);
                 }
+                */
                 break;
             case PARTIALLY_MEMORIZED:
                 // decrement the starting level
-                if (finishedStreak.get() > 0) {
+                int streak = finishedStreak.get();
+                if (streak > 0) {
+                    finishedStreak.set((streak > NUM_LEVELS)
+                            ? NUM_LEVELS - 1 : streak - 1);
+                    /*
                     if (finishedStreak.get() > NUM_LEVELS) {
                         finishedStreak.set(NUM_LEVELS - 1);
                     } else {
                         finishedStreak.set(finishedStreak.get() - 1);
                     }
+                    */
                 }
                 status.set(IN_PROGRESS);
                 break;
@@ -149,5 +157,14 @@ public class Scripture extends Model {
         return "Scripture [reference=" + reference + ", keywords=" + keywords
                 + ", verses=" + verses + ", status=" + status
                 + ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
+    }
+
+    @Override
+    public boolean delete(Context app) {
+        Book book = this.book.get(app);
+        if (book != null) {
+            book.removeFromRoutine(getId(), app);
+        }
+        return super.delete(app);
     }
 }

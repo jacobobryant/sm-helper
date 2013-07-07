@@ -47,6 +47,6 @@
 <string name="pref_reporting">Crash Reporting</string>
 <string name="pref_reporting_summ">Enable reports by email (restart required).</string>
 <string name="mnu_crash">Crash</string>
-<string name="dialog_delete">Delete %s?</string>
+<string name="dialog_delete">Really delete?</string>
 
 </resources>

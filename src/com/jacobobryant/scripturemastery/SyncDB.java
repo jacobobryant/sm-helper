@@ -77,8 +77,7 @@ public class SyncDB {
                 book.addScripture(scrip);
                 scrip.save(app);
             }
-            book.setRoutine(bookRecord);
-            book.save(app);
+            book.setRoutine(bookRecord, app);
         }
         adapter.commitTransaction();
         app.deleteDatabase(DBHandler.DB_NAME);

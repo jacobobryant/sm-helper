@@ -2,16 +2,16 @@ BUGS
 ====
 FC when loading ScriptureActivity
     can't load table scripture
-    status: work-round in place?
-deleted scriptures aren't removed from the current routine
+    status: work-round in place, needs testing
 
 FEATURES
 ========
-better crash handling
-    ask if contact is ok, add info about the database
 add help messages on first run
 about page
     version number, about me, license
+
+better crash handling
+    ask if contact is ok, add info about the database
 add more settings
     change # of levels, review percent, hide preloaded stuff
 NewPassageActivity UI
@@ -19,3 +19,7 @@ Validate current db
     update with new scriptures
     change old scriptures to separate groups
 overhaul model
+
+FIXED/COMPLETED
+===============
+deleted scriptures aren't removed from the current routine

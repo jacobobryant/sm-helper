@@ -109,9 +109,8 @@ public class ScriptureListActivity extends ListActivity {
                 */
             case R.id.mnuStartRoutine:
                 book.createRoutine(getApplication());
-                book.save(getApplication());
             case R.id.mnuContinueRoutine:
-                Log.d(SMApp.TAG, book.getDebugRoutine(getApplication()));
+                Log.d(SMApp.TAG, "routine: " + book.getDebugRoutine());
                 curScripId = book.current(getApplication()).getId();
                 inRoutine = true;
                 startScripture();
@@ -148,6 +147,8 @@ public class ScriptureListActivity extends ListActivity {
                         commit(resultCode);
                         if (inRoutine) {
                             moveForward();
+                        } else {
+                            buildList();
                         }
                         break;
                     default:
@@ -187,12 +188,17 @@ public class ScriptureListActivity extends ListActivity {
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
+        AdapterView.AdapterContextMenuInfo info =
+            (AdapterView.AdapterContextMenuInfo) menuInfo;
         MenuInflater inflater = getMenuInflater();
         Book book = Book.objects(getApplication()).get(bookId);
+        Scripture scrip = book.getScripture(getApplication(),
+                info.position);
 
         if (!book.getPreloaded()) {
             inflater.inflate(R.menu.delete_menu, menu);
-            menu.setHeaderTitle(book.getTitle());
+            menu.setHeaderTitle(scrip.getReference());
+            // change to scripture title
         }
     }
 
@@ -216,22 +222,26 @@ public class ScriptureListActivity extends ListActivity {
     }
 
     @Override
-    protected Dialog onCreateDialog(int id) {
+    protected Dialog onCreateDialog(int id, Bundle args) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         switch (id) {
             case DELETE_DIALOG:
-                builder.setMessage(String.format(getString(R.string.
-                        dialog_delete), deleteScrip.getReference()))
+                builder.setMessage(R.string.dialog_delete)
                     .setPositiveButton(R.string.delete,
                             new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog,
                                 int id) {
-                            deletePassage();
+                            deleteScrip.delete(getApplication());
+                            buildList();
+                            Toast.makeText(getApplication(),
+                                R.string.passage_deleted,
+                                Toast.LENGTH_SHORT).show();
+                            //deletePassage();
                             //deleteScrip = null;
                         }
-                    });
-                /*
-                    .setNegativeButton(android.R.string.cancel,
+                    })
+                    .setNegativeButton(android.R.string.cancel, null);
+                    /*
                             new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog,
                                 int id) {
@@ -244,13 +254,19 @@ public class ScriptureListActivity extends ListActivity {
         return builder.create();
     }
 
+    /*
     private void deletePassage() {
+        /*
+        boolean ret = Book.objects(getApplication()).get(bookId)
+            .removeFromRoutine(deleteScrip, getApplication());
+        Log.d(SMApp.TAG, "deleted from routine: " + String.valueOf(ret));
+        * /
         deleteScrip.delete(getApplication());
         buildList();
         Toast.makeText(this, R.string.passage_deleted,
                 Toast.LENGTH_SHORT).show();
-        // reset routine here
     }
+    */
 
     private void buildList() {
         final String NAME = "NAME";
@@ -307,8 +323,7 @@ public class ScriptureListActivity extends ListActivity {
         Context a = getApplication();
         Book book = Book.objects(a).get(bookId);
         if (book.getRoutineLength() > 0) {
-            book.moveToNext();
-            book.save(a);
+            book.moveToNext(a);
             if (book.getRoutineLength() > 0) {
                 curScripId = book.current(a).getId();
                 startScripture();
