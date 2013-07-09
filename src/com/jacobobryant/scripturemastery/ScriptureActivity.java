@@ -6,12 +6,10 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-
 import android.database.sqlite.SQLiteException;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.SystemClock;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,21 +29,24 @@ public class ScriptureActivity extends Activity {
     public static final int RESULT_MASTERED = RESULT_FIRST_USER + 2;
     private static final int ROUTINE_DIALOG = 0;
     private static final int PROGRESS_DIALOG = 1;
-    private long touchTime;
     private String routine;
     private Passage passage;
     int progress;
     int scripId;
 
-    public class TouchListener implements OnTouchListener {
+    public class DoubleClickListener implements OnTouchListener {
+        private long touchTime;
+
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     handlePress();
                     break;
+                    /*
                 case MotionEvent.ACTION_UP:
                     handleRelease();
                     break;
+                    */
             }
             return false;
         }
@@ -55,18 +56,20 @@ public class ScriptureActivity extends Activity {
             long time = SystemClock.uptimeMillis();
 
             if (touchTime + DOUBLE_TAP_WINDOW > time) {
-                passage.setHintActive(true);
+                passage.toggleHint();
                 setText();
             }
             touchTime = time;
         }
 
+        /*
         public void handleRelease() {
             if (passage.hintActive()) {
                 passage.setHintActive(false);
                 setText();
             }
         }
+        */
     }
 
     @Override
@@ -93,7 +96,8 @@ public class ScriptureActivity extends Activity {
         try {
             scripture = Scripture.objects(a).get(scripId);
         } catch (SQLiteException e) {
-            Log.w(SMApp.TAG, "SQLiteException was caught. Syncing DB and trying again...");
+            Log.w(SMApp.TAG, "SQLiteException was caught. " +
+                    "Syncing DB and trying again...");
             SyncDB.syncDB(a);
             scripture = Scripture.objects(a).get(scripId);
         }
@@ -110,13 +114,12 @@ public class ScriptureActivity extends Activity {
             routine = scripture.getBook(a).getRoutine(a);
         }
         setTitle(scripture.getReference());
-        touchTime = 0;
         for (int i = 0; i < passage.getParagraphs().length; i++) {
             lblVerse = (TextView)
                     inflater.inflate(R.layout.verse, null);
             layout.addView(lblVerse);
         }
-        scrollView.setOnTouchListener(new TouchListener());
+        scrollView.setOnTouchListener(new DoubleClickListener());
         setText();
         progress = RESULT_MEMORIZED;
     }

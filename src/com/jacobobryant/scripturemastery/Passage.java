@@ -193,8 +193,8 @@ public class Passage {
         return ret;
     }
 
-    public void setHintActive(boolean hintActive) {
-        this.hintActive = hintActive;
+    public void toggleHint() {
+        hintActive = !hintActive;
     }
 
     public boolean hintActive() {
