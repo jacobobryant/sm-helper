@@ -1,5 +1,9 @@
 package com.jacobobryant.scripturemastery;
 
+import java.lang.String;
+
+import java.util.LinkedList;
+
 import com.orm.androrm.DatabaseAdapter;
 import com.orm.androrm.Model;
 
@@ -56,6 +60,7 @@ public class SyncDB {
                 populate(app);
             }
         }
+
     }
 
     private static void upgradeDB(Context app) {
@@ -127,48 +132,56 @@ public class SyncDB {
     }
 
     private static void populate(Context app) {
-        final int[] BOOK_IDS = {R.raw.old_testament,
-            R.raw.new_testament, R.raw.book_of_mormon,
-            R.raw.doctrine_and_covenants, R.raw.lists,
-            R.raw.articles_of_faith};
         BufferedReader reader;
         Book book;
         Scripture scrip;
-        String reference;
-        String keywords;
         StringBuilder verses;
-        String verse;
+        String bookName;
+        String line;
+        LinkedList<String> fields;
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
 
         adapter.beginTransaction();
-        for (int id : BOOK_IDS) {
-            book = new Book();
-            book.setPreloaded(true);
-            reader = new BufferedReader(new InputStreamReader(
-                app.getResources().openRawResource(id)));
-            try {
-                book.setTitle(reader.readLine());
-                while ((reference = reader.readLine()) != null) {
-                    keywords = reader.readLine();
+        reader = new BufferedReader(new InputStreamReader(
+                app.getResources().openRawResource(R.raw.scriptures)));
+        try {
+            while ((bookName = reader.readLine()) != null &&
+                    bookName.length() != 0) {
+                book = new Book();
+                book.setPreloaded(true);
+                book.setTitle(bookName);
+                while ((line = reader.readLine()) != null &&
+                        line.length() != 0) {
+                    scrip = new Scripture();
+                    fields = new LinkedList<String>(
+                            Arrays.asList(line.split("\t")));
+                    if (fields.size() < 6) {
+                        Log.e(SMApp.TAG, "not enough fields in line: \"" +
+                                line + "\"");
+                        continue;
+                    }
+                    scrip.setReference(fields.remove(0));
+                    scrip.setKeywords(fields.remove(0));
+                    scrip.setContext(fields.remove(0));
+                    scrip.setDoctrine(fields.remove(0));
+                    scrip.setApplication(fields.remove(0));
                     verses = new StringBuilder();
-                    while ((verse = reader.readLine()) != null &&
-                            verse.length() != 0) {
-                        if (verses.length() > 0) {
+                    for (String verse : fields) {
+                        if (verses.length() != 0) {
                             verses.append("\n");
                         }
                         verses.append(verse);
                     }
-                    scrip = new Scripture(reference, keywords,
-                        verses.toString());
+                    scrip.setVerses(verses.toString());
                     book.addScripture(scrip);
                     scrip.save(app);
                 }
-                reader.close();
-            } catch (IOException ioe) {
-                Log.e(SMApp.TAG, "Couldn't read book data " +
-                    "from file (id = " + id + ")");
+                book.save(app);
             }
-            book.save(app);
+            reader.close();
+        } catch (IOException ioe) {
+            Log.e(SMApp.TAG,
+                    "Couldn't read book data from scriptures.txt");
         }
         adapter.commitTransaction();
     }

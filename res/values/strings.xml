@@ -52,8 +52,10 @@
 <string name="changelog_title">What\'s New</string>
 <string name="changelog_ok_button">OK</string>
 <string name="changelog_show_full">more...</string>
-<string name="about">Version %s<br />Jacob OBryant</string>
+<string name="about">Version %s<br />Jacob O\'Bryant</string>
 <string name="mnu_about">About</string>
+<string name="hint_active">Hint is on</string>
+<string name="hint_inactive">Hint is off</string>
 
 
 </resources>

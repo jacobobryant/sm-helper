@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ScriptureActivity extends Activity {
     public static final String PASSAGE_BUNDLE = "passageBundle";
@@ -36,6 +37,11 @@ public class ScriptureActivity extends Activity {
 
     public class DoubleClickListener implements OnTouchListener {
         private long touchTime;
+        private Context context;
+
+        public DoubleClickListener(Context context) {
+            this.context = context;
+        }
 
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {
@@ -54,9 +60,13 @@ public class ScriptureActivity extends Activity {
         public void handlePress() {
             final int DOUBLE_TAP_WINDOW = 300;
             long time = SystemClock.uptimeMillis();
+            int messageId;
 
             if (touchTime + DOUBLE_TAP_WINDOW > time) {
-                passage.toggleHint();
+                messageId = passage.toggleHint()
+                    ? R.string.hint_active : R.string.hint_inactive;
+                Toast.makeText(context, messageId, Toast.LENGTH_SHORT)
+                    .show();
                 setText();
             }
             touchTime = time;
@@ -119,7 +129,7 @@ public class ScriptureActivity extends Activity {
                     inflater.inflate(R.layout.verse, null);
             layout.addView(lblVerse);
         }
-        scrollView.setOnTouchListener(new DoubleClickListener());
+        scrollView.setOnTouchListener(new DoubleClickListener(this));
         setText();
         progress = RESULT_MEMORIZED;
     }
@@ -166,6 +176,7 @@ public class ScriptureActivity extends Activity {
                 return true;
                 */
             case R.id.mnuIncreaseLevel:
+                passage.setHint(false);
                 passage.increaseLevel();
                 setText();
                 return true;

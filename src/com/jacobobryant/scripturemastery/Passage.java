@@ -22,7 +22,6 @@ public class Passage {
 
     private class Paragraph {
         private Word[] words;
-        private String prefix;
         public final int length;
 
         public class Word {
@@ -90,13 +89,12 @@ public class Passage {
             }
         }
 
-        public Paragraph(String text, String prefix) {
+        public Paragraph(String text) {
             String[] words = text.split(" ");
             this.words = new Word[words.length];
             for (int i = 0; i < words.length; i++) {
                 this.words[i] = new Word(words[i]);
             }
-            this.prefix = prefix;
             length = this.words.length;
         }
 
@@ -106,7 +104,7 @@ public class Passage {
 
         @Override
         public String toString() {
-            StringBuilder text = new StringBuilder(prefix);
+            StringBuilder text = new StringBuilder();
             if (words.length > 0) {
                 text.append(words[0]);
                 for (int i = 1; i < words.length; i++) {
@@ -133,18 +131,14 @@ public class Passage {
             int startLevel) {
         String[] lines = scripture.getVerses().split("\n");
         int wordCount = 0;
-        String prefix = "";
 
         this.paragraphs = new Paragraph[lines.length];
         for (int i = 0; i < lines.length; i++) {
-            if (scripture.isNumbered()) {
-                prefix = (scripture.getFirstVerse() + i) + ". ";
-            }
-            this.paragraphs[i] = new Paragraph(lines[i], prefix);
+            this.paragraphs[i] = new Paragraph(lines[i]);
             wordCount += this.paragraphs[i].length;
         }
-        this.positionIncrement = (int) FloatMath.ceil(
-                (wordCount * HIDDEN_STATES) / (float) Scripture.NUM_LEVELS);
+        this.positionIncrement = (int) FloatMath.ceil((wordCount *
+                    HIDDEN_STATES) / (float) Scripture.NUM_LEVELS);
         this.textPaint = textPaint;
         this.hideOrder = hideOrder;
         this.position = 0;
@@ -193,8 +187,12 @@ public class Passage {
         return ret;
     }
 
-    public void toggleHint() {
-        hintActive = !hintActive;
+    public boolean toggleHint() {
+        return (hintActive = !hintActive);
+    }
+
+    public void setHint(boolean on) {
+        hintActive = on;
     }
 
     public boolean hintActive() {

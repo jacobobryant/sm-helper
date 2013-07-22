@@ -1,16 +1,18 @@
 BUGS
 ====
-none
+Strange errors. Get rid of the ORM?
 
 FEATURES
 ========
-add help messages on first run
-add more settings
-    change # of levels, review percent, hide preloaded stuff
 Validate current db
     update with new scriptures
     change old scriptures to separate groups
+add more settings
+    change # of levels, review percent, hide preloaded stuff
+add help messages on first run
+Add links to scriptures on lds.org
 
+download scriptures from lds.org given the reference
 better crash handling
     ask if contact is ok, add info about the database
 overhaul model

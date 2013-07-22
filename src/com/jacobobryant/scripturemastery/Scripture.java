@@ -5,6 +5,8 @@ import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.ForeignKeyField;
 import com.orm.androrm.field.IntegerField;
 import com.orm.androrm.Filter;
+
+import com.orm.androrm.migration.Migrator;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
@@ -21,6 +23,9 @@ public class Scripture extends Model {
     public static final int MAX_IN_PROGRESS = 3;
     protected CharField reference;
     protected CharField keywords;
+    protected BlobField context;
+    protected BlobField application;
+    protected BlobField doctrine;
     protected BlobField verses;
     protected IntegerField status;
     protected IntegerField finishedStreak;
@@ -29,6 +34,9 @@ public class Scripture extends Model {
     public Scripture() {
         reference = new CharField();
         keywords = new CharField();
+        context = new BlobField();
+        application = new BlobField();
+        doctrine = new BlobField();
         verses = new BlobField();
         status = new IntegerField(1);
         status.set(NOT_STARTED);
@@ -60,12 +68,44 @@ public class Scripture extends Model {
         this(reference, keywords, verses, NOT_STARTED, 0);
     }
 
+    public void setReference(String reference) {
+        this.reference.set(reference);
+    }
+
     public String getReference() {
         return reference.get();
     }
 
+    public void setVerses(String verses) {
+        this.verses.set(verses.getBytes());
+    }
+
     public String getVerses() {
         return new String(verses.get());
+    }
+
+    public void setContext(String context) {
+        this.context.set(context.getBytes());
+    }
+
+    public String getContext() {
+        return new String(context.get());
+    }
+
+    public void setDoctrine(String doctrine) {
+        this.doctrine.set(doctrine.getBytes());
+    }
+
+    public String getDoctrine() {
+        return new String(doctrine.get());
+    }
+
+    public void setApplication(String application) {
+        this.application.set(application.getBytes());
+    }
+
+    public String getApplication() {
+        return new String(application.get());
     }
 
     public int getStatus() {
@@ -133,10 +173,6 @@ public class Scripture extends Model {
         return level;
     }
 
-    public boolean isNumbered() {
-        return new String(reference.get()).matches(".*:\\d+.*");
-    }
-
     public int getFirstVerse() {
         // ex: returns 4 if reference is "foo bar 12:4-6"
         try {
@@ -146,6 +182,10 @@ public class Scripture extends Model {
             throw new UnsupportedOperationException(
                     "not a numbered scripture");
         }
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords.set(keywords);
     }
 
     public String getKeywords() {
@@ -166,5 +206,15 @@ public class Scripture extends Model {
             book.removeFromRoutine(getId(), app);
         }
         return super.delete(app);
+    }
+
+    @Override
+    protected void migrate(Context context) {
+        Migrator<Scripture> migrator =
+                new Migrator<Scripture>(Scripture.class);
+        migrator.addField("context", new CharField());
+        migrator.addField("application", new CharField());
+        migrator.addField("doctrine", new CharField());
+        migrator.migrate(context);
     }
 }
