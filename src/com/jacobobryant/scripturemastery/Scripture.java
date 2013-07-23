@@ -29,9 +29,11 @@ public class Scripture extends Model {
     protected BlobField verses;
     protected IntegerField status;
     protected IntegerField finishedStreak;
+    protected IntegerField position;
     protected ForeignKeyField<Book> book;
 
     public Scripture() {
+        position = new IntegerField();
         reference = new CharField();
         keywords = new CharField();
         context = new BlobField();
@@ -66,6 +68,14 @@ public class Scripture extends Model {
 
     public Scripture(String reference, String keywords, String verses) {
         this(reference, keywords, verses, NOT_STARTED, 0);
+    }
+
+    public Integer getPosition() {
+        return position.get();
+    }
+
+    public void setPosition(Integer position) {
+        this.position.set(position);
     }
 
     public void setReference(String reference) {
@@ -194,9 +204,14 @@ public class Scripture extends Model {
 
     @Override
     public String toString() {
-        return "Scripture [reference=" + reference + ", keywords=" + keywords
-                + ", verses=" + verses + ", status=" + status
-                + ", finishedStreak=" + finishedStreak + ", book=" + book.get().getTitle() + "]";
+        return "Scripture [reference=" + reference + ", position=" +
+            position + "]";
+        /*
+        return "Scripture [reference=" + reference + ", keywords=" +
+            keywords + ", verses=" + verses + ", status=" + status +
+            ", finishedStreak=" + finishedStreak + ", book=" +
+            book.get().getTitle() + "]";
+            */
     }
 
     @Override
@@ -215,6 +230,7 @@ public class Scripture extends Model {
         migrator.addField("context", new CharField());
         migrator.addField("application", new CharField());
         migrator.addField("doctrine", new CharField());
+        migrator.addField("position", new IntegerField());
         migrator.migrate(context);
     }
 }

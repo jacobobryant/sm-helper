@@ -224,7 +224,8 @@ public class MainActivity extends ListActivity {
                 new ArrayList<Map<String, String>>();
         Map<String, String> map;
 
-        for (Book book : Book.objects(getApplication()).all()) {
+        for (Book book : Book.objects(getApplication()).all()
+                .orderBy("position")) {
             map = new HashMap<String, String>();
             map.put(NAME, book.getTitle());
             bookData.add(map);

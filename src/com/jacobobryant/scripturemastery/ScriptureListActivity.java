@@ -274,10 +274,11 @@ public class ScriptureListActivity extends ListActivity {
         List<Map<String, String>> data =
                 new ArrayList<Map<String, String>>();
         Map<String, String> map;
-        Context app = getApplication();
 
-        for (Scripture scrip : Scripture.objects(app).filter(
-                new Filter().is("book__mId", bookId))) {
+        for (Scripture scrip : Scripture.objects(getApplication())
+                .filter(new Filter().is("book__mId", bookId))
+                .orderBy("position")) {
+            Log.d(SMApp.TAG, "loading scripture: " + scrip);
             map = new HashMap<String, String>();
             map.put(NAME, scrip.getReference());
             map.put(STATUS, getStatusString(scrip.getStatus()));

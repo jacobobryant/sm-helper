@@ -3,23 +3,23 @@ package com.jacobobryant.scripturemastery;
 import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.BooleanField;
 import com.orm.androrm.field.CharField;
+import com.orm.androrm.field.IntegerField;
 import com.orm.androrm.field.OneToManyField;
+import com.orm.androrm.migration.Migrator;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
 import android.content.Context;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Book extends Model {
     protected CharField title;
     protected OneToManyField<Book, Scripture> scriptures;
     protected BlobField routine;
     protected BooleanField preloaded;
+    protected IntegerField position;
     private LinkedList<Integer> lstRoutine;
 
     public static final QuerySet<Book> objects(Context context) {
@@ -34,6 +34,7 @@ public class Book extends Model {
     public Book() {
         super();
         title = new CharField();
+        position = new IntegerField();
         preloaded = new BooleanField();
         routine = new BlobField();
         scriptures = new OneToManyField<Book, Scripture>(
@@ -51,6 +52,14 @@ public class Book extends Model {
                 lstRoutine.add(buf.getInt());
             }
         }
+    }
+
+    public Integer getPosition() {
+        return position.get();
+    }
+
+    public void setPosition(Integer position) {
+        this.position.set(position);
     }
 
     public String getTitle() {
@@ -205,5 +214,12 @@ public class Book extends Model {
             }
             save(app);
         }
+    }
+
+    @Override
+    protected void migrate(Context context) {
+        Migrator<Book> migrator = new Migrator<Book>(Book.class);
+        migrator.addField("position", new IntegerField());
+        migrator.migrate(context);
     }
 }
