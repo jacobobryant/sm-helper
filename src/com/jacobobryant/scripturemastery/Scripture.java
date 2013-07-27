@@ -118,8 +118,16 @@ public class Scripture extends Model {
         return new String(application.get());
     }
 
+    public void setStatus(int status) {
+        this.status.set(status);
+    }
+
     public int getStatus() {
         return status.get();
+    }
+
+    public void setFinishedStreak(int streak) {
+        finishedStreak.set(streak);
     }
 
     public int getFinishedStreak() {

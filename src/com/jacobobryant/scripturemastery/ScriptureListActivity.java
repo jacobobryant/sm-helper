@@ -64,12 +64,6 @@ public class ScriptureListActivity extends ListActivity {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(SMApp.TAG, "ScriptureListActivity.onResume()");
-    }
-
-    @Override
     public void onListItemClick(ListView listView, View v,
             int index, long id) {
         Log.d(SMApp.TAG, "index = " + index);
@@ -155,24 +149,6 @@ public class ScriptureListActivity extends ListActivity {
                         inRoutine = false;
                         curScripId = -1;
                 }
-                /*
-                switch (resultCode) {
-                    case ScriptureActivity.RESULT_MASTERED:
-                        commit(Scripture.MASTERED);
-                        moveForward();
-                        break;
-                    case ScriptureActivity.RESULT_MEMORIZED:
-                        commit(Scripture.MEMORIZED);
-                        moveForward();
-                        break;
-                    case ScriptureActivity.RESULT_PARTIALLY_MEMORIZED:
-                        commit(Scripture.PARTIALLY_MEMORIZED);
-                        moveForward();
-                        break;
-                    default:
-                        curScripId = -1;
-                }
-                */
                 break;
         }
     }
@@ -236,37 +212,13 @@ public class ScriptureListActivity extends ListActivity {
                             Toast.makeText(getApplication(),
                                 R.string.passage_deleted,
                                 Toast.LENGTH_SHORT).show();
-                            //deletePassage();
-                            //deleteScrip = null;
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null);
-                    /*
-                            new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog,
-                                int id) {
-                            deleteScrip = null;
-                        }
-                    });
-                    */
                 break;
         }
         return builder.create();
     }
-
-    /*
-    private void deletePassage() {
-        /*
-        boolean ret = Book.objects(getApplication()).get(bookId)
-            .removeFromRoutine(deleteScrip, getApplication());
-        Log.d(SMApp.TAG, "deleted from routine: " + String.valueOf(ret));
-        * /
-        deleteScrip.delete(getApplication());
-        buildList();
-        Toast.makeText(this, R.string.passage_deleted,
-                Toast.LENGTH_SHORT).show();
-    }
-    */
 
     private void buildList() {
         final String NAME = "NAME";
@@ -278,7 +230,6 @@ public class ScriptureListActivity extends ListActivity {
         for (Scripture scrip : Scripture.objects(getApplication())
                 .filter(new Filter().is("book__mId", bookId))
                 .orderBy("position")) {
-            Log.d(SMApp.TAG, "loading scripture: " + scrip);
             map = new HashMap<String, String>();
             map.put(NAME, scrip.getReference());
             map.put(STATUS, getStatusString(scrip.getStatus()));

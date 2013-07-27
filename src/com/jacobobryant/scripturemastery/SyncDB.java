@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.DatabaseAdapter;
+import com.orm.androrm.Filter;
 import com.orm.androrm.Model;
 
 import android.content.Context;
@@ -37,6 +38,16 @@ public class SyncDB {
         public int finishedStreak;
     }
 
+    public static class Holder {
+        public Book book;
+        public List<Scripture> scriptures;
+
+        public Holder(Book book, List<Scripture> scriptures) {
+            this.book = book;
+            this.scriptures = scriptures;
+        }
+    }
+
     public static void syncDB(Context app) {
         final String DB_NAME = "sm.db";
         List<Class<? extends Model>> models =
@@ -44,12 +55,14 @@ public class SyncDB {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(app);
         int dbVersion = prefs.getInt(PREF_VERSION, 0);
+        Log.d(SMApp.TAG, "syncing DB, version " + dbVersion);
 
         models.add(Book.class);
         models.add(Scripture.class);
         DatabaseAdapter.setDatabaseName(DB_NAME);
         DatabaseAdapter.getInstance(app)
                 .setModels(models);
+
         if (Book.objects(app).count() == 0) {
             if (app.getDatabasePath(DBHandler.DB_NAME).exists()) {
                 migrate(app);
@@ -60,9 +73,10 @@ public class SyncDB {
             }
         }
         if (dbVersion < VERSION) {
-            //upgrade(app, dbVersion);
-            //prefs.edit().putInt(PREF_VERSION, VERSION).apply();
+            upgrade(app, dbVersion);
+            prefs.edit().putInt(PREF_VERSION, VERSION).apply();
         }
+        Log.d(SMApp.TAG, "done syncing DB");
     }
 
     private static void upgrade(Context app, int oldVersion) {
@@ -75,33 +89,57 @@ public class SyncDB {
     }
 
     private static void upgrade0to1(Context app) {
-        int bookPosition = 0;
-        int scripPosition;
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        List<Holder> holders = getBooks(app);
+        List<Book> bookMatches;
+        List<Scripture> scripMatches;
+        Scripture match;
+        Filter filter;
 
-        adapter.beginTransaction();
-        for (Book book : Book.objects(app).all()) {
-            book.setPosition(bookPosition++);
-            book.save(app);
-            scripPosition = 0;
-            for (Scripture scrip : book.getScriptures(app).all()) {
-                scrip.setPosition(scripPosition++);
-                scrip.save(app);
+        for (Holder holder : holders) {
+            L.log("merging " + holder.book.getTitle());
+            filter = new Filter().is("preloaded", 1)
+                    .is("title", holder.book.getTitle());
+            bookMatches = Book.objects(app).filter(filter).toList();
+            if (bookMatches.size() > 0) {
+                for (Scripture newScrip : holder.scriptures) {
+                    filter = new Filter().is("reference",
+                            newScrip.getReference());
+                    scripMatches = bookMatches.get(0).getScriptures(app)
+                            .filter(filter).toList();
+                    if (scripMatches.size() > 0) {
+                        match = scripMatches.get(0);
+                        newScrip.setStatus(match.getStatus());
+                        newScrip.setFinishedStreak(
+                                match.getFinishedStreak());
+                    }
+                }
             }
         }
+        L.log("deleting old scriptures");
+        adapter.beginTransaction();
+        for (Book book : Book.objects(app).all()) {
+            book.delete(app);
+        }
+        for (Scripture scrip : Scripture.objects(app).all()) {
+            scrip.delete(app);
+        }
+        save(app, holders);
         adapter.commitTransaction();
     }
 
     private static void migrate(Context app) {
+        Log.d(SMApp.TAG, "migrating from pre-androrm DB");
         List<BookRecord> books;
         Book book;
         Scripture scrip;
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
 
-        books = getBooks(app);
+        books = getOldBooks(app);
         adapter.beginTransaction();
         for (BookRecord bookRecord : books) {
             book = new Book();
+            Log.d(SMApp.TAG, "migrating " + bookRecord.title);
             book.setTitle(bookRecord.title);
             book.setPreloaded(bookRecord.preloaded);
             for (ScripRecord scripRecord : bookRecord.scriptures) {
@@ -112,12 +150,13 @@ public class SyncDB {
                 scrip.save(app);
             }
             book.setRoutine(bookRecord, app);
+            book.save(app);
         }
         adapter.commitTransaction();
         app.deleteDatabase(DBHandler.DB_NAME);
     }
 
-    private static List<BookRecord> getBooks(Context app) {
+    private static List<BookRecord> getOldBooks(Context app) {
         String table;
         Cursor bookCursor;
         Cursor scriptureCursor;
@@ -160,7 +199,8 @@ public class SyncDB {
         return books;
     }
 
-    private static void populate(Context app) {
+    private static List<Holder> getBooks(Context app) {
+        Log.d(SMApp.TAG, "Reading scriptures from file");
         BufferedReader reader;
         Book book;
         Scripture scrip;
@@ -168,20 +208,22 @@ public class SyncDB {
         String bookName;
         String line;
         LinkedList<String> fields;
-        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
         int bookPosition = 0;
         int scripPosition;
+        List<Scripture> scripList;
+        List<Holder> holders = new LinkedList<Holder>();
 
-        adapter.beginTransaction();
         reader = new BufferedReader(new InputStreamReader(
                 app.getResources().openRawResource(R.raw.scriptures)));
         try {
             while ((bookName = reader.readLine()) != null &&
                     bookName.length() != 0) {
+                Log.d(SMApp.TAG, "reading " + bookName);
                 book = new Book();
                 book.setPosition(bookPosition++);
                 book.setPreloaded(true);
                 book.setTitle(bookName);
+                scripList = new LinkedList<Scripture>();
                 scripPosition = 0;
                 while ((line = reader.readLine()) != null &&
                         line.length() != 0) {
@@ -207,16 +249,35 @@ public class SyncDB {
                         verses.append(verse);
                     }
                     scrip.setVerses(verses.toString());
-                    book.addScripture(scrip);
-                    scrip.save(app);
+                    scripList.add(scrip);
                 }
-                book.save(app);
+                holders.add(new Holder(book, scripList));
             }
             reader.close();
         } catch (IOException ioe) {
             Log.e(SMApp.TAG,
                     "Couldn't read book data from scriptures.txt");
         }
+        L.log("finished reading books");
+        return holders;
+    }
+
+    private static void populate(Context app) {
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        adapter.beginTransaction();
+        save(app, getBooks(app));
         adapter.commitTransaction();
+    }
+
+    private static void save(Context app, List<Holder> holders) {
+        L.log("saving");
+        for (Holder holder : holders) {
+            for (Scripture scrip : holder.scriptures) {
+                holder.book.addScripture(scrip);
+                scrip.save(app);
+            }
+            holder.book.save(app);
+        }
+        L.log("finished saving");
     }
 }
