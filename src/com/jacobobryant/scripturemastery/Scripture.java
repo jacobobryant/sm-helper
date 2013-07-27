@@ -99,7 +99,7 @@ public class Scripture extends Model {
     }
 
     public String getContext() {
-        return new String(context.get());
+        return ((context.get() != null) ? new String(context.get()) : "");
     }
 
     public void setDoctrine(String doctrine) {
@@ -107,7 +107,8 @@ public class Scripture extends Model {
     }
 
     public String getDoctrine() {
-        return new String(doctrine.get());
+        return ((doctrine.get() != null)
+                ? new String(doctrine.get()) : "");
     }
 
     public void setApplication(String application) {
@@ -115,7 +116,8 @@ public class Scripture extends Model {
     }
 
     public String getApplication() {
-        return new String(application.get());
+        return ((application.get() != null)
+                ? new String(application.get()) : "");
     }
 
     public void setStatus(int status) {
@@ -226,7 +228,7 @@ public class Scripture extends Model {
     public boolean delete(Context app) {
         Book book = this.book.get(app);
         if (book != null) {
-            book.removeFromRoutine(getId(), app);
+            book.deleteScripture(this, app);
         }
         return super.delete(app);
     }

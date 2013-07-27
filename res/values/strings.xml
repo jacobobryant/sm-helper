@@ -56,6 +56,8 @@
 <string name="mnu_about">About</string>
 <string name="hint_active">Hint is on</string>
 <string name="hint_inactive">Hint is off</string>
-
+<string name="mnu_context">Context</string>
+<string name="mnu_doctrine">Doctrine</string>
+<string name="mnu_application">Application</string>
 
 </resources>

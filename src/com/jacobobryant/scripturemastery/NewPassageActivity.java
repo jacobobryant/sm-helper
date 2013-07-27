@@ -62,19 +62,6 @@ public class NewPassageActivity extends Activity {
         }
     }
 
-    /*
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-    */
-
     public void btnSaveClick(View v) {
         final Spinner spnGroup = (Spinner) findViewById(R.id.spnGroup);
         final EditText txtGroup =
@@ -86,7 +73,8 @@ public class NewPassageActivity extends Activity {
         boolean createGroup = txtGroup.getVisibility() == View.VISIBLE;
         Book group;
         Scripture passage;
-        int position;
+        int bookPosition;
+        int scripPosition;
         
         if (createGroup && isEmpty(txtGroup)) {
             txtGroup.setError(getString(R.string.noGroupError));
@@ -109,13 +97,17 @@ public class NewPassageActivity extends Activity {
         if (createGroup) {
             group = new Book();
             group.setTitle(txtGroup.getText().toString());
+            bookPosition = Book.objects(getApplication()).count();
+            group.setPosition(bookPosition);
             group.save(getApplication());
         } else {
-            position = spnGroup.getSelectedItemPosition();
+            bookPosition = spnGroup.getSelectedItemPosition();
             group = Book.objects(getApplication())
-                    .get(bookIds.get(position));
+                    .get(bookIds.get(bookPosition));
         }
+        scripPosition = group.getScriptures(getApplication()).count();
         passage.setBook(group);
+        passage.setPosition(scripPosition);
         passage.save(getApplication());
         setResult(RESULT_OK);
         finish();

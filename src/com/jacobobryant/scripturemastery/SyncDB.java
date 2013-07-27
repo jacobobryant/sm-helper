@@ -55,6 +55,7 @@ public class SyncDB {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(app);
         int dbVersion = prefs.getInt(PREF_VERSION, 0);
+        //int dbVersion = 0;
         Log.d(SMApp.TAG, "syncing DB, version " + dbVersion);
 
         models.add(Book.class);
@@ -237,10 +238,10 @@ public class SyncDB {
                         continue;
                     }
                     scrip.setReference(fields.remove());
-                    scrip.setKeywords(fields.remove());
-                    scrip.setContext(fields.remove());
-                    scrip.setDoctrine(fields.remove());
-                    scrip.setApplication(fields.remove());
+                    scrip.setKeywords(fields.remove().trim());
+                    scrip.setContext(fields.remove().trim());
+                    scrip.setDoctrine(fields.remove().trim());
+                    scrip.setApplication(fields.remove().trim());
                     verses = new StringBuilder();
                     for (String verse : fields) {
                         if (verses.length() != 0) {

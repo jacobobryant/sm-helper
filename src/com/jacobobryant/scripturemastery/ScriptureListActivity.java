@@ -252,7 +252,8 @@ public class ScriptureListActivity extends ListActivity {
             case Scripture.FINISHED:
                 return "finished";
             default:
-                throw new IllegalArgumentException();
+                L.w("invalid status: " + status);
+                return "";
         }
     }
 

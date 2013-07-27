@@ -1,10 +1,14 @@
 package com.jacobobryant.scripturemastery;
 
+import com.orm.androrm.DatabaseAdapter;
+
 import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.BooleanField;
 import com.orm.androrm.field.CharField;
 import com.orm.androrm.field.IntegerField;
 import com.orm.androrm.field.OneToManyField;
+
+import com.orm.androrm.Filter;
 import com.orm.androrm.migration.Migrator;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
@@ -166,11 +170,20 @@ public class Book extends Model {
         return sb.toString();
     }
 
-    public void removeFromRoutine(Integer scripId, Context app) {
+    public void deleteScripture(Scripture scrip, Context app) {
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        adapter.beginTransaction();
         loadRoutine();
-        if (lstRoutine.remove(scripId)) {
+        if (lstRoutine.remove(new Integer(scrip.getId()))) {
             save(app);
         }
+        Filter f = new Filter().is("position", ">", scrip.getPosition());
+        for (Scripture scripture :
+                Scripture.objects(app).filter(f)) {
+            scripture.setPosition(scripture.getPosition() - 1);
+            scripture.save(app);
+        }
+        adapter.commitTransaction();
     }
 
     @Override

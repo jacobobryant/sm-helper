@@ -143,7 +143,7 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL("ALTER TABLE " + BOOKS + " ADD COLUMN " +
                 "is_scripture INTEGER DEFAULT 0");
         db.execSQL("UPDATE " + BOOKS + " SET is_scripture = 1 " + 
-                "WHERE _id <= " + BOOK_IDS.length);
+                "WHERE _id <= " + 4);
     }
 
     private void upgrade4to5(SQLiteDatabase db) {

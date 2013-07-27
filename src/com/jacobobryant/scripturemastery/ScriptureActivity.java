@@ -30,10 +30,14 @@ public class ScriptureActivity extends Activity {
     public static final int RESULT_MASTERED = RESULT_FIRST_USER + 2;
     private static final int ROUTINE_DIALOG = 0;
     private static final int PROGRESS_DIALOG = 1;
+    private static final int CONTEXT_DIALOG = 2;
+    private static final int DOCTRINE_DIALOG = 3;
+    private static final int APPLICATION_DIALOG = 4;
     private String routine;
     private Passage passage;
-    int progress;
-    int scripId;
+    private int progress;
+    private int scripId;
+    private Scripture scripture;
 
     public class DoubleClickListener implements OnTouchListener {
         private long touchTime;
@@ -90,7 +94,6 @@ public class ScriptureActivity extends Activity {
         LayoutInflater inflater = LayoutInflater.from(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.layout);
         TextView lblVerse;
-        Scripture scripture;
         Paint defaultPaint = ((TextView)
                 inflater.inflate(R.layout.verse, null)).getPaint();
         View scrollView = findViewById(R.id.scroll);
@@ -104,6 +107,7 @@ public class ScriptureActivity extends Activity {
         scripId = intent.getIntExtra(
                 ScriptureListActivity.EXTRA_SCRIP_ID, -1);
         try {
+            // There have been weird crash reports for this line
             scripture = Scripture.objects(a).get(scripId);
         } catch (SQLiteException e) {
             Log.w(SMApp.TAG, "SQLiteException was caught. " +
@@ -135,12 +139,6 @@ public class ScriptureActivity extends Activity {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(SMApp.TAG, "ScriptureActivity.onResume()");
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle state) {
         state.putBundle(PASSAGE_BUNDLE, passage.getBundle());
         super.onSaveInstanceState(state);
@@ -161,6 +159,13 @@ public class ScriptureActivity extends Activity {
         }
         if (routine == null) {
             menu.findItem(R.id.mnuRoutine).setVisible(false);
+        }
+        L.log("scripture.getContext().length(): " + scripture.getContext().length());
+        if (scripture.getContext().length() == 0) {
+            menu.findItem(R.id.mnu_context).setVisible(false);
+            menu.findItem(R.id.mnu_doctrine).setVisible(false);
+            menu.findItem(R.id.mnu_application).setVisible(false);
+
         }
         return true;
     }
@@ -183,6 +188,15 @@ public class ScriptureActivity extends Activity {
             case R.id.mnuDone:
                 showDialog(PROGRESS_DIALOG);
                 return true;
+            case R.id.mnu_context:
+                showDialog(CONTEXT_DIALOG);
+                return true;
+            case R.id.mnu_doctrine:
+                showDialog(DOCTRINE_DIALOG);
+                return true;
+            case R.id.mnu_application:
+                showDialog(APPLICATION_DIALOG);
+                return true;
             case R.id.mnuRoutine:
                 showDialog(ROUTINE_DIALOG);
                 return true;
@@ -202,6 +216,21 @@ public class ScriptureActivity extends Activity {
             case ROUTINE_DIALOG:
                 builder.setTitle(R.string.routineDialog)
                         .setMessage(routine)
+                        .setPositiveButton(android.R.string.ok, null);
+                break;
+            case CONTEXT_DIALOG:
+                builder.setTitle(R.string.mnu_context)
+                        .setMessage(scripture.getContext())
+                        .setPositiveButton(android.R.string.ok, null);
+                break;
+            case DOCTRINE_DIALOG:
+                builder.setTitle(R.string.mnu_doctrine)
+                        .setMessage(scripture.getDoctrine())
+                        .setPositiveButton(android.R.string.ok, null);
+                break;
+            case APPLICATION_DIALOG:
+                builder.setTitle(R.string.mnu_application)
+                        .setMessage(scripture.getApplication())
                         .setPositiveButton(android.R.string.ok, null);
                 break;
             case PROGRESS_DIALOG:

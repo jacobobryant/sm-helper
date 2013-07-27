@@ -4,9 +4,6 @@ Strange errors. Get rid of the ORM?
 
 FEATURES
 ========
-Validate current db
-    update with new scriptures
-    change old scriptures to separate groups
 add more settings
     change # of levels, review percent, hide preloaded stuff
 add help messages on first run
@@ -19,7 +16,6 @@ overhaul model
 
 NEEDS TESTING
 =============
-double tap to toggle hint
 FC when loading ScriptureActivity
     can't load table scripture
 

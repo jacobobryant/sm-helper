@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.DatabaseAdapter;
+import com.orm.androrm.Filter;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -207,9 +208,15 @@ public class MainActivity extends ListActivity {
     private void deleteGroup() {
         Context app = getApplication();
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        Filter f;
         adapter.beginTransaction();
         for (Scripture scrip : deleteBook.getScriptures(app).all()) {
             scrip.delete(app);
+        }
+        f = new Filter().is("position", ">", deleteBook.getPosition());
+        for (Book book : Book.objects(app).filter(f)) {
+            book.setPosition(book.getPosition() - 1);
+            book.save(app);
         }
         deleteBook.delete(app);
         adapter.commitTransaction();
