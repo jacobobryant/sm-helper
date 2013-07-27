@@ -119,10 +119,10 @@ public class ScriptureActivity extends Activity {
         // shouldn't throw NullPointerExceptions, but they do.
         try {
             Bundle passageBundle = state.getBundle(PASSAGE_BUNDLE);
-            passage = new Passage(scripture, defaultPaint,
+            passage = new Passage(a, scripture, defaultPaint,
                     passageBundle);
         } catch (NullPointerException e) {
-            passage = new Passage(scripture, defaultPaint);
+            passage = new Passage(a, scripture, defaultPaint);
         }
         if (inRoutine) {
             routine = scripture.getBook(a).getRoutine(a);
@@ -154,7 +154,7 @@ public class ScriptureActivity extends Activity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        if (!passage.hasMoreLevels()) {
+        if (!passage.hasMoreLevels(getApplication())) {
             menu.findItem(R.id.mnuIncreaseLevel).setVisible(false);
         }
         if (routine == null) {
@@ -182,7 +182,7 @@ public class ScriptureActivity extends Activity {
                 */
             case R.id.mnuIncreaseLevel:
                 passage.setHint(false);
-                passage.increaseLevel();
+                passage.increaseLevel(getApplication());
                 setText();
                 return true;
             case R.id.mnuDone:

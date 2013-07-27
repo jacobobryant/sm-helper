@@ -268,7 +268,7 @@ public class ScriptureListActivity extends ListActivity {
         results.put(ScriptureActivity.RESULT_PARTIALLY_MEMORIZED,
                 Scripture.PARTIALLY_MEMORIZED);
 
-        curScripture.setProgress(results.get(returnCode));
+        curScripture.setProgress(a, results.get(returnCode));
         curScripture.save(a);
     }
 

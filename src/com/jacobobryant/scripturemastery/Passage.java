@@ -1,5 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
+import android.content.Context;
+
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.FloatMath;
@@ -116,19 +118,19 @@ public class Passage {
         }
     }
 
-    public Passage(Scripture scripture, Paint textPaint, Bundle bundle) {
-        this(scripture, textPaint,
-                bundle.getIntArray(HIDE_ORDER),
+    public Passage(Context app, Scripture scripture, Paint textPaint,
+            Bundle bundle) {
+        this(app, scripture, textPaint, bundle.getIntArray(HIDE_ORDER),
                 bundle.getInt(LEVEL));
     }
 
-    public Passage(Scripture scripture, Paint textPaint) {
-        this(scripture, textPaint, calcHideOrder(scripture),
-                scripture.getStartLevel());
+    public Passage(Context app, Scripture scripture, Paint textPaint) {
+        this(app, scripture, textPaint, calcHideOrder(scripture),
+                scripture.getStartLevel(app));
     }
 
-    private Passage(Scripture scripture, Paint textPaint, int[] hideOrder,
-            int startLevel) {
+    private Passage(Context app, Scripture scripture, Paint textPaint,
+            int[] hideOrder, int startLevel) {
         String[] lines = scripture.getVerses().split("\n");
         int wordCount = 0;
 
@@ -138,14 +140,14 @@ public class Passage {
             wordCount += this.paragraphs[i].length;
         }
         this.positionIncrement = (int) FloatMath.ceil((wordCount *
-                    HIDDEN_STATES) / (float) Scripture.NUM_LEVELS);
+                HIDDEN_STATES) / (float) Scripture.getNumLevels(app));
         this.textPaint = textPaint;
         this.hideOrder = hideOrder;
         this.position = 0;
         this.level = 0;
         this.hintActive = false;
         for (int i = 0; i < startLevel; i++) {
-            increaseLevel();
+            increaseLevel(app);
         }
     }
 
@@ -199,10 +201,10 @@ public class Passage {
         return hintActive;
     }
 
-    public void increaseLevel() {
+    public void increaseLevel(Context app) {
         int nextPosition = position + positionIncrement;
         int maxPosition = hideOrder.length * HIDDEN_STATES;
-        if (! hasMoreLevels()) {
+        if (! hasMoreLevels(app)) {
             throw new UnsupportedOperationException();
         }
         if (nextPosition > maxPosition) {
@@ -235,7 +237,7 @@ public class Passage {
         return paragraphs[paraIndex].getWord(wordIndex);
     }
 
-    public boolean hasMoreLevels() {
-        return (level < Scripture.NUM_LEVELS);
+    public boolean hasMoreLevels(Context app) {
+        return (level < Scripture.getNumLevels(app));
     }
 }

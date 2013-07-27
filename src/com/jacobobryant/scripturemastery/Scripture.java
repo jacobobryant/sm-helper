@@ -11,6 +11,9 @@ import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+
+import android.preference.PreferenceManager;
 
 public class Scripture extends Model {
     public static final int NOT_STARTED = 0;
@@ -19,7 +22,6 @@ public class Scripture extends Model {
     public static final int MASTERED = 0;
     public static final int MEMORIZED = 1;
     public static final int PARTIALLY_MEMORIZED = 2;
-    public static final int NUM_LEVELS = 5;
     public static final int MAX_IN_PROGRESS = 3;
     protected CharField reference;
     protected CharField keywords;
@@ -136,39 +138,35 @@ public class Scripture extends Model {
         return finishedStreak.get();
     }
 
-    public void setProgress(int progress) {
+    public static int getNumLevels(Context app) {
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(app);
+        int numLevels = Integer.parseInt(prefs.getString(
+                    SettingsActivity.LEVELS, 
+                app.getString(R.string.pref_levels_default)));
+        return numLevels;
+    }
+
+    public void setProgress(Context app, int progress) {
+        int numLevels = getNumLevels(app);
         switch (progress) {
             case MASTERED:
-                if (finishedStreak.get() < NUM_LEVELS) {
-                    finishedStreak.set(NUM_LEVELS);
+                if (finishedStreak.get() < numLevels) {
+                    finishedStreak.set(numLevels);
                     status.set(FINISHED);
                 }
                 break;
             case MEMORIZED:
                 finishedStreak.set(finishedStreak.get() + 1);
-                status.set((finishedStreak.get() > NUM_LEVELS)
+                status.set((finishedStreak.get() > numLevels)
                         ? FINISHED : IN_PROGRESS);
-                /*
-                if (finishedStreak.get() > NUM_LEVELS ) {
-                    status.set(FINISHED);
-                } else {
-                    status.set(IN_PROGRESS);
-                }
-                */
                 break;
             case PARTIALLY_MEMORIZED:
                 // decrement the starting level
                 int streak = finishedStreak.get();
                 if (streak > 0) {
-                    finishedStreak.set((streak > NUM_LEVELS)
-                            ? NUM_LEVELS - 1 : streak - 1);
-                    /*
-                    if (finishedStreak.get() > NUM_LEVELS) {
-                        finishedStreak.set(NUM_LEVELS - 1);
-                    } else {
-                        finishedStreak.set(finishedStreak.get() - 1);
-                    }
-                    */
+                    finishedStreak.set((streak > numLevels)
+                            ? numLevels - 1 : streak - 1);
                 }
                 status.set(IN_PROGRESS);
                 break;
@@ -183,12 +181,13 @@ public class Scripture extends Model {
         this.book.set(book);
     }
 
-    public int getStartLevel() {
+    public int getStartLevel(Context app) {
+        int numLevels = getNumLevels(app);
         int level = finishedStreak.get();
         if (level < 0) {
             level = 0;
-        } else if (level > NUM_LEVELS) {
-            level = NUM_LEVELS;
+        } else if (level > numLevels) {
+            level = numLevels;
         }
         return level;
     }

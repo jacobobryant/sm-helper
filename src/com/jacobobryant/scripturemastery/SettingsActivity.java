@@ -7,6 +7,7 @@ import android.preference.PreferenceActivity;
 public class SettingsActivity extends PreferenceActivity {
     public static final String KEYWORDS = "pref_keywords";
     public static final String REPORTING = "pref_reporting";
+    public static final String LEVELS = "pref_levels";
 
     @SuppressWarnings("deprecation")
     @Override

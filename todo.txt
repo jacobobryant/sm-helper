@@ -5,10 +5,11 @@ Strange errors. Get rid of the ORM?
 FEATURES
 ========
 add more settings
-    change # of levels, review percent, hide preloaded stuff
+    change # of levels, review percent
 add help messages on first run
 Add links to scriptures on lds.org
 
+setting: hide preloaded stuff
 download scriptures from lds.org given the reference
 better crash handling
     ask if contact is ok, add info about the database
