@@ -18,6 +18,10 @@ import android.content.Context;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import android.content.SharedPreferences;
+
+import android.preference.PreferenceManager;
+
 public class Book extends Model {
     protected CharField title;
     protected OneToManyField<Book, Scripture> scriptures;
@@ -105,7 +109,11 @@ public class Book extends Model {
     }
 
     public void createRoutine(Context context) {
-        final float REVIEW_PERCENT = 2.0f / 5;
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        float reviewPercent = Float.parseFloat(prefs.getString(
+                SettingsActivity.REVIEW, 
+                context.getString(R.string.pref_review_default)));
         List<Integer> notStarted = new ArrayList<Integer>();
         List<Integer> inProgress = new ArrayList<Integer>();
         List<Integer> finished = new ArrayList<Integer>();
@@ -124,7 +132,7 @@ public class Book extends Model {
             }
             list.add(scrip.getId());
         }
-        reviewCount = Math.round(REVIEW_PERCENT * finished.size());
+        reviewCount = Math.round(reviewPercent * finished.size());
         if (finished.size() != 0 && reviewCount == 0) {
             reviewCount = 1;
         }

@@ -54,8 +54,8 @@ public class SyncDB {
                 new ArrayList<Class<? extends Model>>();
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(app);
-        int dbVersion = prefs.getInt(PREF_VERSION, 0);
-        //int dbVersion = 0;
+        //int dbVersion = prefs.getInt(PREF_VERSION, 0);
+        int dbVersion = 0;
         Log.d(SMApp.TAG, "syncing DB, version " + dbVersion);
 
         models.add(Book.class);
@@ -90,15 +90,19 @@ public class SyncDB {
     }
 
     private static void upgrade0to1(Context app) {
-        final int OLD_NUM_LEVELS = 5;
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
         List<Holder> holders = getBooks(app);
         List<Book> bookMatches;
         List<Scripture> scripMatches;
-        Scripture match;
         Filter filter;
-        double ratio;
 
+        filter = new Filter().contains("reference", "-");
+        adapter.beginTransaction();
+        for (Scripture scrip : Scripture.objects(app).filter(filter)) {
+            scrip.setReference(scrip.getReference().replace('-', '–'));
+            scrip.save(app);
+        }
+        adapter.commitTransaction();
         for (Holder holder : holders) {
             L.log("merging " + holder.book.getTitle());
             filter = new Filter().is("preloaded", 1)
@@ -111,14 +115,7 @@ public class SyncDB {
                     scripMatches = bookMatches.get(0).getScriptures(app)
                             .filter(filter).toList();
                     if (scripMatches.size() > 0) {
-                        match = scripMatches.get(0);
-                        newScrip.setStatus(match.getStatus());
-                        ratio = (double) match.getFinishedStreak() /
-                                OLD_NUM_LEVELS;
-                        if (ratio > 1.0) {
-                            ratio = 1.0;
-                        }
-                        newScrip.setStartRatio(ratio);
+                        updateScripture(scripMatches.get(0), newScrip);
                     }
                 }
             }
@@ -135,8 +132,24 @@ public class SyncDB {
         adapter.commitTransaction();
     }
 
+    private static void updateScripture(Scripture oldScrip,
+            Scripture newScrip) {
+        final int OLD_NUM_LEVELS = 5;
+        double ratio = (double) oldScrip.getFinishedStreak() /
+                OLD_NUM_LEVELS;
+
+        if (oldScrip.getFinishedStreak() >= OLD_NUM_LEVELS) {
+            ratio = 1.0;
+            if (oldScrip.getStatus() == Scripture.IN_PROGRESS) {
+                newScrip.setStatus(Scripture.FINISHED);
+            }
+        } else {
+            newScrip.setStatus(oldScrip.getStatus());
+        }
+        newScrip.setStartRatio(ratio);
+    }
+
     private static void migrate(Context app) {
-        Log.d(SMApp.TAG, "migrating from pre-androrm DB");
         List<BookRecord> books;
         Book book;
         Scripture scrip;

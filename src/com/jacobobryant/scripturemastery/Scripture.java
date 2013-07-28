@@ -154,7 +154,7 @@ public class Scripture extends Model {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(app);
         int numLevels = Integer.parseInt(prefs.getString(
-                    SettingsActivity.LEVELS, 
+                SettingsActivity.LEVELS, 
                 app.getString(R.string.pref_levels_default)));
         return numLevels;
     }
@@ -246,7 +246,7 @@ public class Scripture extends Model {
     @Override
     public String toString() {
         return "Scripture [reference=" + reference + ", position=" +
-            position + "]";
+            position + ", streak=" + finishedStreak + "]";
         /*
         return "Scripture [reference=" + reference + ", keywords=" +
             keywords + ", verses=" + verses + ", status=" + status +

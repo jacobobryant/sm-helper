@@ -74,4 +74,26 @@
 </string-array>
 <string name="pref_levels_default">5</string>
 
+<string name="pref_review">Review Percentage</string>
+<string name="pref_review_summ">The amount of mastered scriptures to review in a routine</string>
+<string-array name="pref_review_entries">
+    <item>20%</item>
+    <item>30%</item>
+    <item>40%</item>
+    <item>50%</item>
+    <item>60%</item>
+    <item>70%</item>
+    <item>80%</item>
+</string-array>
+<string-array name="pref_review_values">
+    <item>.2</item>
+    <item>.3</item>
+    <item>.4</item>
+    <item>.5</item>
+    <item>.6</item>
+    <item>.7</item>
+    <item>.8</item>
+</string-array>
+<string name="pref_review_default">.4</string>
+
 </resources>

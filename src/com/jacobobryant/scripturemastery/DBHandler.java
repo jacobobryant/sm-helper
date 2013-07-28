@@ -121,6 +121,8 @@ public class DBHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion,
                           int newVersion) {
+        L.d("upgrading pre-androrm DB from version " + oldVersion +
+                " to " + newVersion);
         if (oldVersion == 3) {
             upgrade3to4(db);
             oldVersion++;
