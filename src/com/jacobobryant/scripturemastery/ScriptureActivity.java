@@ -148,6 +148,16 @@ public class ScriptureActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.scripture_activity_options, menu);
+        L.log("scripture.getContext().length(): "
+                + scripture.getContext().length());
+        if (routine == null) {
+            menu.findItem(R.id.mnuRoutine).setVisible(false);
+        }
+        if (scripture.getContext().length() == 0) {
+            menu.findItem(R.id.mnu_context).setVisible(false);
+            menu.findItem(R.id.mnu_doctrine).setVisible(false);
+            menu.findItem(R.id.mnu_application).setVisible(false);
+        }
         return true;
     }
 
@@ -156,16 +166,6 @@ public class ScriptureActivity extends Activity {
         super.onCreateOptionsMenu(menu);
         if (!passage.hasMoreLevels(getApplication())) {
             menu.findItem(R.id.mnuIncreaseLevel).setVisible(false);
-        }
-        if (routine == null) {
-            menu.findItem(R.id.mnuRoutine).setVisible(false);
-        }
-        L.log("scripture.getContext().length(): " + scripture.getContext().length());
-        if (scripture.getContext().length() == 0) {
-            menu.findItem(R.id.mnu_context).setVisible(false);
-            menu.findItem(R.id.mnu_doctrine).setVisible(false);
-            menu.findItem(R.id.mnu_application).setVisible(false);
-
         }
         return true;
     }

@@ -90,12 +90,14 @@ public class SyncDB {
     }
 
     private static void upgrade0to1(Context app) {
+        final int OLD_NUM_LEVELS = 5;
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
         List<Holder> holders = getBooks(app);
         List<Book> bookMatches;
         List<Scripture> scripMatches;
         Scripture match;
         Filter filter;
+        double ratio;
 
         for (Holder holder : holders) {
             L.log("merging " + holder.book.getTitle());
@@ -111,8 +113,12 @@ public class SyncDB {
                     if (scripMatches.size() > 0) {
                         match = scripMatches.get(0);
                         newScrip.setStatus(match.getStatus());
-                        newScrip.setFinishedStreak(
-                                match.getFinishedStreak());
+                        ratio = (double) match.getFinishedStreak() /
+                                OLD_NUM_LEVELS;
+                        if (ratio > 1.0) {
+                            ratio = 1.0;
+                        }
+                        newScrip.setStartRatio(ratio);
                     }
                 }
             }

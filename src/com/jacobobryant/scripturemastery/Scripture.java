@@ -2,17 +2,16 @@ package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.CharField;
+import com.orm.androrm.field.DoubleField;
 import com.orm.androrm.field.ForeignKeyField;
 import com.orm.androrm.field.IntegerField;
 import com.orm.androrm.Filter;
-
 import com.orm.androrm.migration.Migrator;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import android.preference.PreferenceManager;
 
 public class Scripture extends Model {
@@ -31,6 +30,7 @@ public class Scripture extends Model {
     protected BlobField verses;
     protected IntegerField status;
     protected IntegerField finishedStreak;
+    protected DoubleField startRatio;
     protected IntegerField position;
     protected ForeignKeyField<Book> book;
 
@@ -45,6 +45,7 @@ public class Scripture extends Model {
         status = new IntegerField(1);
         status.set(NOT_STARTED);
         finishedStreak = new IntegerField(2);
+        startRatio = new DoubleField();
         book = new ForeignKeyField<Book>(Book.class);
     }
 
@@ -70,6 +71,14 @@ public class Scripture extends Model {
 
     public Scripture(String reference, String keywords, String verses) {
         this(reference, keywords, verses, NOT_STARTED, 0);
+    }
+
+    public double getStartRatio() {
+        return startRatio.get();
+    }
+
+    public void setStartRatio(double ratio) {
+        startRatio.set(ratio);
     }
 
     public Integer getPosition() {
@@ -130,10 +139,13 @@ public class Scripture extends Model {
         return status.get();
     }
 
+    /*
     public void setFinishedStreak(int streak) {
         finishedStreak.set(streak);
     }
+    */
 
+    // only used in SyncDB.upgrade0to1
     public int getFinishedStreak() {
         return finishedStreak.get();
     }
@@ -149,24 +161,41 @@ public class Scripture extends Model {
 
     public void setProgress(Context app, int progress) {
         int numLevels = getNumLevels(app);
+        double increment = 1.0 / numLevels;
+        double ratio;
         switch (progress) {
             case MASTERED:
+                startRatio.set(1.0);
+                status.set(FINISHED);
+                /*
                 if (finishedStreak.get() < numLevels) {
                     finishedStreak.set(numLevels);
                     status.set(FINISHED);
                 }
+                */
                 break;
             case MEMORIZED:
-                finishedStreak.set(finishedStreak.get() + 1);
-                status.set((finishedStreak.get() > numLevels)
+                //finishedStreak.set(finishedStreak.get() + 1);
+                ratio = startRatio.get() + increment;
+                if (ratio > 1.0) {
+                    ratio = 1.0;
+                }
+                startRatio.set(ratio);
+                status.set((1.0 - ratio < (increment / 2))
                         ? FINISHED : IN_PROGRESS);
                 break;
             case PARTIALLY_MEMORIZED:
                 // decrement the starting level
+                /*
                 int streak = finishedStreak.get();
                 if (streak > 0) {
                     finishedStreak.set((streak > numLevels)
                             ? numLevels - 1 : streak - 1);
+                }
+                */
+                ratio = startRatio.get() - increment;
+                if (ratio < 0) {
+                    ratio = 0;
                 }
                 status.set(IN_PROGRESS);
                 break;
@@ -183,6 +212,8 @@ public class Scripture extends Model {
 
     public int getStartLevel(Context app) {
         int numLevels = getNumLevels(app);
+        return (int) Math.round(startRatio.get() * numLevels);
+        /*
         int level = finishedStreak.get();
         if (level < 0) {
             level = 0;
@@ -190,6 +221,7 @@ public class Scripture extends Model {
             level = numLevels;
         }
         return level;
+        */
     }
 
     public int getFirstVerse() {
@@ -240,6 +272,7 @@ public class Scripture extends Model {
         migrator.addField("application", new CharField());
         migrator.addField("doctrine", new CharField());
         migrator.addField("position", new IntegerField());
+        migrator.addField("startRatio", new DoubleField());
         migrator.migrate(context);
     }
 }
