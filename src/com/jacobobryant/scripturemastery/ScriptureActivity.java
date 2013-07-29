@@ -264,7 +264,7 @@ public class ScriptureActivity extends Activity {
 
     private void openWebScripture() {
         String url = "http://www.lds.org/search?collection=scriptures&query="
-                + scripture.getReference();
+                + scripture.getReference().split("–")[0];
         Intent browserIntent =
                 new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(browserIntent);

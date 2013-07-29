@@ -21,6 +21,14 @@
     </style>
   </head>
   <body>
+$ 0.7
+% Version 0.7 (29 Jul 2013)
+_ Final Release (for now)
+* New scripture masteries for the Book of Mormon &amp; Old Testament
+* Context, doctrine and application information for scriptures
+* View scriptures on LDS.org
+* Minor tweaks and bug fixes
+! I am leaving to the MTC in two days, so I will be unable to work on this app for the next two years (I'll be serving in the Singapore mission). My family can still forward messages to me that are sent to my email address, but I can't respond to bug reports or feature requests until I get back. It's been a pleasure working on this app. If you have benefitted from using it, please consider donating to your ward's mission fund or sending me a quick note. I enjoy hearing from you :). Ta-ta for now! — Elder O'Bryant
 $ 0.6.1
 % Version 0.6.1 (6 Jul 2013)
 * Improved UI
