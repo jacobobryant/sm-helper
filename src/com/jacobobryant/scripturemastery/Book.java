@@ -1,25 +1,33 @@
 package com.jacobobryant.scripturemastery;
 
+import com.orm.androrm.DatabaseAdapter;
+
 import com.orm.androrm.field.BlobField;
 import com.orm.androrm.field.BooleanField;
 import com.orm.androrm.field.CharField;
+import com.orm.androrm.field.IntegerField;
 import com.orm.androrm.field.OneToManyField;
+
+import com.orm.androrm.Filter;
+import com.orm.androrm.migration.Migrator;
 import com.orm.androrm.Model;
 import com.orm.androrm.QuerySet;
 
 import android.content.Context;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+import android.content.SharedPreferences;
+
+import android.preference.PreferenceManager;
 
 public class Book extends Model {
     protected CharField title;
     protected OneToManyField<Book, Scripture> scriptures;
     protected BlobField routine;
     protected BooleanField preloaded;
+    protected IntegerField position;
     private LinkedList<Integer> lstRoutine;
 
     public static final QuerySet<Book> objects(Context context) {
@@ -27,13 +35,15 @@ public class Book extends Model {
     }
 
     public static Book object(Context context, int index) {
-        return objects(context, Book.class).all().limit(index, 1)
+        Filter filter = new Filter().is("position", index);
+        return objects(context, Book.class).filter(filter)
             .toList().get(0);
     }
 
     public Book() {
         super();
         title = new CharField();
+        position = new IntegerField();
         preloaded = new BooleanField();
         routine = new BlobField();
         scriptures = new OneToManyField<Book, Scripture>(
@@ -51,6 +61,14 @@ public class Book extends Model {
                 lstRoutine.add(buf.getInt());
             }
         }
+    }
+
+    public Integer getPosition() {
+        return position.get();
+    }
+
+    public void setPosition(Integer position) {
+        this.position.set(position);
     }
 
     public String getTitle() {
@@ -92,7 +110,11 @@ public class Book extends Model {
     }
 
     public void createRoutine(Context context) {
-        final float REVIEW_PERCENT = 2.0f / 5;
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        float reviewPercent = Float.parseFloat(prefs.getString(
+                SettingsActivity.REVIEW, 
+                context.getString(R.string.pref_review_default)));
         List<Integer> notStarted = new ArrayList<Integer>();
         List<Integer> inProgress = new ArrayList<Integer>();
         List<Integer> finished = new ArrayList<Integer>();
@@ -111,7 +133,7 @@ public class Book extends Model {
             }
             list.add(scrip.getId());
         }
-        reviewCount = Math.round(REVIEW_PERCENT * finished.size());
+        reviewCount = Math.round(reviewPercent * finished.size());
         if (finished.size() != 0 && reviewCount == 0) {
             reviewCount = 1;
         }
@@ -157,11 +179,20 @@ public class Book extends Model {
         return sb.toString();
     }
 
-    public void removeFromRoutine(Integer scripId, Context app) {
+    public void deleteScripture(Scripture scrip, Context app) {
+        DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        adapter.beginTransaction();
         loadRoutine();
-        if (lstRoutine.remove(scripId)) {
+        if (lstRoutine.remove(new Integer(scrip.getId()))) {
             save(app);
         }
+        Filter f = new Filter().is("position", ">", scrip.getPosition());
+        for (Scripture scripture :
+                Scripture.objects(app).filter(f)) {
+            scripture.setPosition(scripture.getPosition() - 1);
+            scripture.save(app);
+        }
+        adapter.commitTransaction();
     }
 
     @Override
@@ -205,5 +236,12 @@ public class Book extends Model {
             }
             save(app);
         }
+    }
+
+    @Override
+    protected void migrate(Context context) {
+        Migrator<Book> migrator = new Migrator<Book>(Book.class);
+        migrator.addField("position", new IntegerField());
+        migrator.migrate(context);
     }
 }

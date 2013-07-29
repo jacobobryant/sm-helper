@@ -121,6 +121,8 @@ public class DBHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion,
                           int newVersion) {
+        L.d("upgrading pre-androrm DB from version " + oldVersion +
+                " to " + newVersion);
         if (oldVersion == 3) {
             upgrade3to4(db);
             oldVersion++;
@@ -143,7 +145,7 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL("ALTER TABLE " + BOOKS + " ADD COLUMN " +
                 "is_scripture INTEGER DEFAULT 0");
         db.execSQL("UPDATE " + BOOKS + " SET is_scripture = 1 " + 
-                "WHERE _id <= " + BOOK_IDS.length);
+                "WHERE _id <= " + 4);
     }
 
     private void upgrade4to5(SQLiteDatabase db) {

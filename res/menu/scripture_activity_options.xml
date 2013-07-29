@@ -7,6 +7,18 @@
         android:id="@+id/mnuDone"
         android:title="@string/mnuDone" />
     <item
+        android:id="@+id/mnu_context"
+        android:title="@string/mnu_context" />
+    <item
+        android:id="@+id/mnu_doctrine"
+        android:title="@string/mnu_doctrine" />
+    <item
+        android:id="@+id/mnu_application"
+        android:title="@string/mnu_application" />
+    <item
+        android:id="@+id/mnu_open"
+        android:title="@string/mnu_open" />
+    <item
         android:id="@+id/mnuRoutine"
         android:title="@string/mnuRoutine" />
     <item

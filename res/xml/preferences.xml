@@ -10,4 +10,20 @@
         android:title="@string/pref_reporting"
         android:summary="@string/pref_reporting_summ"
         android:defaultValue="true" />
+    <ListPreference
+        android:key="pref_levels"
+        android:title="@string/pref_levels"
+        android:dialogTitle="@string/pref_levels"
+        android:entries="@array/pref_levels_entries"
+        android:entryValues="@array/pref_levels_entries"
+        android:summary="@string/pref_levels_summ"
+        android:defaultValue="@string/pref_levels_default" />
+    <ListPreference
+        android:key="pref_review"
+        android:title="@string/pref_review"
+        android:dialogTitle="@string/pref_review"
+        android:entries="@array/pref_review_entries"
+        android:entryValues="@array/pref_review_values"
+        android:summary="@string/pref_review_summ"
+        android:defaultValue="@string/pref_review_default" />
 </PreferenceScreen>

@@ -52,8 +52,52 @@
 <string name="changelog_title">What\'s New</string>
 <string name="changelog_ok_button">OK</string>
 <string name="changelog_show_full">more...</string>
-<string name="about">Version %s<br />Jacob OBryant</string>
+<string name="about">Version %s<br />Jacob O\'Bryant</string>
 <string name="mnu_about">About</string>
+<string name="hint_active">Hint is on</string>
+<string name="hint_inactive">Hint is off</string>
+<string name="mnu_context">Context</string>
+<string name="mnu_doctrine">Doctrine</string>
+<string name="mnu_application">Application</string>
 
+<string name="pref_levels">Number of Levels</string>
+<string name="pref_levels_summ">The number of times a scripture\'s level can be increased</string>
+<string-array name="pref_levels_entries">
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+    <item>4</item>
+    <item>5</item>
+    <item>6</item>
+    <item>7</item>
+    <item>8</item>
+</string-array>
+<string name="pref_levels_default">5</string>
 
+<string name="pref_review">Review Percentage</string>
+<string name="pref_review_summ">The amount of mastered scriptures to review in a routine</string>
+<string-array name="pref_review_entries">
+    <item>20%</item>
+    <item>30%</item>
+    <item>40%</item>
+    <item>50%</item>
+    <item>60%</item>
+    <item>70%</item>
+    <item>80%</item>
+</string-array>
+<string-array name="pref_review_values">
+    <item>.2</item>
+    <item>.3</item>
+    <item>.4</item>
+    <item>.5</item>
+    <item>.6</item>
+    <item>.7</item>
+    <item>.8</item>
+</string-array>
+<string name="pref_review_default">.4</string>
+
+<string name="help_title">Did you know?</string>
+<string name="toggle_help_message">If you\'re having trouble remembering
+    a word, you can toggle hint mode by double tapping the screen.</string>
+<string name="mnu_open">Open on LDS.org</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.Filter;
+import com.orm.androrm.QuerySet;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -61,12 +62,6 @@ public class ScriptureListActivity extends ListActivity {
             inRoutine = false;
         }
         registerForContextMenu(getListView());
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(SMApp.TAG, "ScriptureListActivity.onResume()");
     }
 
     @Override
@@ -155,24 +150,6 @@ public class ScriptureListActivity extends ListActivity {
                         inRoutine = false;
                         curScripId = -1;
                 }
-                /*
-                switch (resultCode) {
-                    case ScriptureActivity.RESULT_MASTERED:
-                        commit(Scripture.MASTERED);
-                        moveForward();
-                        break;
-                    case ScriptureActivity.RESULT_MEMORIZED:
-                        commit(Scripture.MEMORIZED);
-                        moveForward();
-                        break;
-                    case ScriptureActivity.RESULT_PARTIALLY_MEMORIZED:
-                        commit(Scripture.PARTIALLY_MEMORIZED);
-                        moveForward();
-                        break;
-                    default:
-                        curScripId = -1;
-                }
-                */
                 break;
         }
     }
@@ -236,37 +213,13 @@ public class ScriptureListActivity extends ListActivity {
                             Toast.makeText(getApplication(),
                                 R.string.passage_deleted,
                                 Toast.LENGTH_SHORT).show();
-                            //deletePassage();
-                            //deleteScrip = null;
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null);
-                    /*
-                            new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog,
-                                int id) {
-                            deleteScrip = null;
-                        }
-                    });
-                    */
                 break;
         }
         return builder.create();
     }
-
-    /*
-    private void deletePassage() {
-        /*
-        boolean ret = Book.objects(getApplication()).get(bookId)
-            .removeFromRoutine(deleteScrip, getApplication());
-        Log.d(SMApp.TAG, "deleted from routine: " + String.valueOf(ret));
-        * /
-        deleteScrip.delete(getApplication());
-        buildList();
-        Toast.makeText(this, R.string.passage_deleted,
-                Toast.LENGTH_SHORT).show();
-    }
-    */
 
     private void buildList() {
         final String NAME = "NAME";
@@ -274,10 +227,24 @@ public class ScriptureListActivity extends ListActivity {
         List<Map<String, String>> data =
                 new ArrayList<Map<String, String>>();
         Map<String, String> map;
-        Context app = getApplication();
-
-        for (Scripture scrip : Scripture.objects(app).filter(
-                new Filter().is("book__mId", bookId))) {
+        QuerySet<Scripture> results;
+        
+        try {
+            results = Scripture.objects(getApplication())
+                    .filter(new Filter().is("book__mId", bookId))
+                    .orderBy("position");
+        } catch (RuntimeException e) {
+            // Tried to catch NoSuchFieldException, but eclipse gave an
+            // error about the code not throwing that exception. The code does
+            // throw that exception, however (see com.orm.androrm.Model).
+            L.w("NoSuchFieldException in ScriptureListActivity" +
+                    ".buildList. Syncing DB and trying again...");
+            SyncDB.syncDB(getApplication());
+            results = Scripture.objects(getApplication())
+                    .filter(new Filter().is("book__mId", bookId))
+                    .orderBy("position");
+        }
+        for (Scripture scrip : results) {
             map = new HashMap<String, String>();
             map.put(NAME, scrip.getReference());
             map.put(STATUS, getStatusString(scrip.getStatus()));
@@ -300,7 +267,8 @@ public class ScriptureListActivity extends ListActivity {
             case Scripture.FINISHED:
                 return "finished";
             default:
-                throw new IllegalArgumentException();
+                L.w("invalid status: " + status);
+                return "";
         }
     }
 
@@ -315,7 +283,7 @@ public class ScriptureListActivity extends ListActivity {
         results.put(ScriptureActivity.RESULT_PARTIALLY_MEMORIZED,
                 Scripture.PARTIALLY_MEMORIZED);
 
-        curScripture.setProgress(results.get(returnCode));
+        curScripture.setProgress(a, results.get(returnCode));
         curScripture.save(a);
     }
 

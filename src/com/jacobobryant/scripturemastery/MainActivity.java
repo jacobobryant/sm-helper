@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.DatabaseAdapter;
+import com.orm.androrm.Filter;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -12,7 +13,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -25,9 +25,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class MainActivity extends ListActivity {
@@ -199,17 +197,21 @@ public class MainActivity extends ListActivity {
             Log.e(SMApp.TAG, "Couldn't read about text");
         }
         content = (Spannable) Html.fromHtml(String.format(text.toString(), version));
-        Linkify.addLinks(content,
-                Linkify.EMAIL_ADDRESSES|Linkify.WEB_URLS);
         return content;
     }
 
     private void deleteGroup() {
         Context app = getApplication();
         DatabaseAdapter adapter = DatabaseAdapter.getInstance(app);
+        Filter f;
         adapter.beginTransaction();
         for (Scripture scrip : deleteBook.getScriptures(app).all()) {
             scrip.delete(app);
+        }
+        f = new Filter().is("position", ">", deleteBook.getPosition());
+        for (Book book : Book.objects(app).filter(f)) {
+            book.setPosition(book.getPosition() - 1);
+            book.save(app);
         }
         deleteBook.delete(app);
         adapter.commitTransaction();
@@ -224,7 +226,8 @@ public class MainActivity extends ListActivity {
                 new ArrayList<Map<String, String>>();
         Map<String, String> map;
 
-        for (Book book : Book.objects(getApplication()).all()) {
+        for (Book book : Book.objects(getApplication()).all()
+                .orderBy("position")) {
             map = new HashMap<String, String>();
             map.put(NAME, book.getTitle());
             bookData.add(map);
