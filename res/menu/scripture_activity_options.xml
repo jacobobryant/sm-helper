@@ -16,6 +16,9 @@
         android:id="@+id/mnu_application"
         android:title="@string/mnu_application" />
     <item
+        android:id="@+id/mnu_open"
+        android:title="@string/mnu_open" />
+    <item
         android:id="@+id/mnuRoutine"
         android:title="@string/mnuRoutine" />
     <item

@@ -1,6 +1,7 @@
 package com.jacobobryant.scripturemastery;
 
 import com.orm.androrm.Filter;
+import com.orm.androrm.QuerySet;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -226,10 +227,24 @@ public class ScriptureListActivity extends ListActivity {
         List<Map<String, String>> data =
                 new ArrayList<Map<String, String>>();
         Map<String, String> map;
-
-        for (Scripture scrip : Scripture.objects(getApplication())
-                .filter(new Filter().is("book__mId", bookId))
-                .orderBy("position")) {
+        QuerySet<Scripture> results;
+        
+        try {
+            results = Scripture.objects(getApplication())
+                    .filter(new Filter().is("book__mId", bookId))
+                    .orderBy("position");
+        } catch (RuntimeException e) {
+            // Tried to catch NoSuchFieldException, but eclipse gave an
+            // error about the code not throwing that exception. The code does
+            // throw that exception, however (see com.orm.androrm.Model).
+            L.w("NoSuchFieldException in ScriptureListActivity" +
+                    ".buildList. Syncing DB and trying again...");
+            SyncDB.syncDB(getApplication());
+            results = Scripture.objects(getApplication())
+                    .filter(new Filter().is("book__mId", bookId))
+                    .orderBy("position");
+        }
+        for (Scripture scrip : results) {
             map = new HashMap<String, String>();
             map.put(NAME, scrip.getReference());
             map.put(STATUS, getStatusString(scrip.getStatus()));

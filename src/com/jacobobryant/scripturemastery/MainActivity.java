@@ -13,7 +13,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -26,9 +25,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class MainActivity extends ListActivity {
@@ -200,8 +197,6 @@ public class MainActivity extends ListActivity {
             Log.e(SMApp.TAG, "Couldn't read about text");
         }
         content = (Spannable) Html.fromHtml(String.format(text.toString(), version));
-        Linkify.addLinks(content,
-                Linkify.EMAIL_ADDRESSES|Linkify.WEB_URLS);
         return content;
     }
 

@@ -54,8 +54,8 @@ public class SyncDB {
                 new ArrayList<Class<? extends Model>>();
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(app);
-        //int dbVersion = prefs.getInt(PREF_VERSION, 0);
-        int dbVersion = 0;
+        int dbVersion = prefs.getInt(PREF_VERSION, 0);
+        //int dbVersion = 0;
         Log.d(SMApp.TAG, "syncing DB, version " + dbVersion);
 
         models.add(Book.class);
@@ -95,6 +95,7 @@ public class SyncDB {
         List<Book> bookMatches;
         List<Scripture> scripMatches;
         Filter filter;
+        int position;
 
         filter = new Filter().contains("reference", "-");
         adapter.beginTransaction();
@@ -120,13 +121,23 @@ public class SyncDB {
                 }
             }
         }
-        L.log("deleting old scriptures");
         adapter.beginTransaction();
-        for (Book book : Book.objects(app).all()) {
-            book.delete(app);
+        L.log("resetting position fields");
+        filter = new Filter().is("preloaded", 0);
+        position = holders.size();
+        for (Book book : Book.objects(app).filter(filter)) {
+            L.d("setting " + book.getTitle() + " to position "
+                    + position);
+            book.setPosition(position++);
+            book.save(app);
         }
-        for (Scripture scrip : Scripture.objects(app).all()) {
-            scrip.delete(app);
+        L.log("deleting old scriptures");
+        filter = new Filter().is("preloaded", 1);
+        for (Book book : Book.objects(app).filter(filter)) {
+            for (Scripture scrip : book.getScriptures(app)) {
+                scrip.delete(app);
+            }
+            book.delete(app);
         }
         save(app, holders);
         adapter.commitTransaction();

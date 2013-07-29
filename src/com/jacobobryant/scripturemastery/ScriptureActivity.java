@@ -6,10 +6,13 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +36,8 @@ public class ScriptureActivity extends Activity {
     private static final int CONTEXT_DIALOG = 2;
     private static final int DOCTRINE_DIALOG = 3;
     private static final int APPLICATION_DIALOG = 4;
+    private static final int HELP_DIALOG = 5;
+    private static final String PREF_HELP_SHOWN = "pref_help_shown";
     private String routine;
     private Passage passage;
     private int progress;
@@ -86,6 +91,7 @@ public class ScriptureActivity extends Activity {
         */
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -100,7 +106,14 @@ public class ScriptureActivity extends Activity {
         Intent intent = getIntent();
         Context a = getApplication();
         boolean inRoutine;
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(a);
+        boolean helpShown = prefs.getBoolean(PREF_HELP_SHOWN, false);
 
+        if (!helpShown) {
+            showDialog(HELP_DIALOG);
+            prefs.edit().putBoolean(PREF_HELP_SHOWN, true).apply();
+        }
         //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         inRoutine = intent.getBooleanExtra(
                 ScriptureListActivity.EXTRA_IN_ROUTINE, false);
@@ -157,6 +170,7 @@ public class ScriptureActivity extends Activity {
             menu.findItem(R.id.mnu_context).setVisible(false);
             menu.findItem(R.id.mnu_doctrine).setVisible(false);
             menu.findItem(R.id.mnu_application).setVisible(false);
+            menu.findItem(R.id.mnu_open).setVisible(false);
         }
         return true;
     }
@@ -200,6 +214,9 @@ public class ScriptureActivity extends Activity {
             case R.id.mnuRoutine:
                 showDialog(ROUTINE_DIALOG);
                 return true;
+            case R.id.mnu_open:
+                openWebScripture();
+                return true;
             case R.id.mnu_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
@@ -236,8 +253,21 @@ public class ScriptureActivity extends Activity {
             case PROGRESS_DIALOG:
                 buildProgressDialog(builder);
                 break;
+            case HELP_DIALOG:
+                builder.setTitle(R.string.help_title)
+                        .setMessage(R.string.toggle_help_message)
+                        .setPositiveButton(android.R.string.ok, null);
+                break;
         }
         return builder.create();
+    }
+
+    private void openWebScripture() {
+        String url = "http://www.lds.org/search?collection=scriptures&query="
+                + scripture.getReference();
+        Intent browserIntent =
+                new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(browserIntent);
     }
 
     private void buildProgressDialog(AlertDialog.Builder builder) {

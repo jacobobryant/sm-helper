@@ -35,7 +35,8 @@ public class Book extends Model {
     }
 
     public static Book object(Context context, int index) {
-        return objects(context, Book.class).all().limit(index, 1)
+        Filter filter = new Filter().is("position", index);
+        return objects(context, Book.class).filter(filter)
             .toList().get(0);
     }
 

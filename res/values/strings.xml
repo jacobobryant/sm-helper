@@ -96,4 +96,8 @@
 </string-array>
 <string name="pref_review_default">.4</string>
 
+<string name="help_title">Did you know?</string>
+<string name="toggle_help_message">If you\'re having trouble remembering
+    a word, you can toggle hint mode by double tapping the screen.</string>
+<string name="mnu_open">Open scripture on LDS.org</string>
 </resources>
